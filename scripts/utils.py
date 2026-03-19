@@ -16,10 +16,12 @@ def get_mods():
                 files.append(final)
             else:
                 logs.append(final)
+        return files, logs
+    return [], [["error", "folder", "No mods in directory found!"]]
 
 
 def convert_to_data(file):
-    if file.contains("-sources") or file.contains("-javadoc"):
+    if "-sources" in file or "-javadoc" in file:
         return ["warn", "file", "This file is not a valid mod file, skipping..."]
     parsed = parse(template, file)
     if parsed:

@@ -1,4 +1,5 @@
 from flet import *
+import utils as ut
 
 def page(page: Page):
     page.title = "MCPublisher"
@@ -8,7 +9,40 @@ def page(page: Page):
     page.bgcolor = "#c1ffe1"
 
     def get_mods(e):
-        pass
+        mods, logs = ut.get_mods()
+        table.rows.clear()
+
+        for mod in mods:
+            table.rows.append(
+                DataRow(
+                    cells=[
+                        DataCell(Text(mod[1])),
+                        DataCell(Text(mod[2])),
+                        DataCell(Text(mod[3])),
+                        DataCell(Text(mod[4])),
+                    ]
+                )
+            )
+
+        table.update()
+
+        
+        if logs:
+            print(logs)
+            dialog = AlertDialog(
+            title=Text("Logs"),
+            content=Column(
+                    [Text(log) for log in logs],
+                    scroll=ScrollMode.AUTO,
+                    height=200,
+                ),
+            actions=[
+                    TextButton("Close", on_click=lambda e: close_dialog())
+                ]
+            )
+            page.dialog = dialog
+            dialog.open = True
+            page.update()
 
     def publish(e):
         pass
@@ -16,8 +50,32 @@ def page(page: Page):
     def open_settings(e):
         pass
 
+    def close_dialog():
+        page.dialog.open = False
+        page.update()
+
+    table = DataTable(
+        columns=[
+            DataColumn(Text("ID", color="#ffffff")),
+            DataColumn(Text("Version", color="#ffffff")),
+            DataColumn(Text("Loader", color="#ffffff")),
+            DataColumn(Text("Minecraft", color="#ffffff"))
+        ],
+        width = 800,
+        height = 350,
+        bgcolor="#8df9b4",
+        heading_row_color="#5fe28f",
+        data_row_color="#8df9b4",
+        data_text_style=TextStyle(color="#FFFFFF"),
+        horizontal_lines=True,
+        rows=[] 
+    )
+
     page.add(
-        
+        Row(
+            alignment=MainAxisAlignment.CENTER,
+            controls=[table]
+        ),
         Row(
             alignment=MainAxisAlignment.CENTER,
             controls=[
@@ -33,7 +91,7 @@ def page(page: Page):
                         overlay_color="#c1b52f"
                     ),
                     on_click=get_mods),
-                Button(
+                ElevatedButton(
                     "Publish",
                     
                     width=150,
