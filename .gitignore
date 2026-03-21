@@ -1,2 +1,4 @@
 scripts/__pycache__
 mods/*
+settings.json
+cache/*
