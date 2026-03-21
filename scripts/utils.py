@@ -3,6 +3,8 @@ from parse import parse
 
 template = "{mod_id}[{mod_version}]-{loader}({mc_version}).jar"
 
+
+
 def get_mods():
     if os.path.exists("mods"):
         raw_files = os.listdir("mods")
@@ -12,20 +14,19 @@ def get_mods():
         files = [] 
         for file in raw_files:
             final = convert_to_data(file)
-            if final[0] != "warn" and final[0] != "error":
+            if final[0] != "Warn" and final[0] != "Error":
                 files.append(final)
             else:
                 logs.append(final)
         return files, logs
-    return [], [["error", "folder", "No mods in directory found!"]]
-
+    return [], [["Error", "", "No mods in directory found!"]]
 
 def convert_to_data(file):
     if "-sources" in file or "-javadoc" in file:
-        return ["warn", "file", "This file is not a valid mod file, skipping..."]
+        return ["Warn", file, "This file is not a valid mod file, skipping..."]
     parsed = parse(template, file)
     if parsed:
         return [file, parsed["mod_id"], parsed["mod_version"], parsed["loader"], parsed["mc_version"]]
     else:
-        return ["error", "file", "This file does not follow the required naming convention, skipping..."]
+        return ["Error", file, "This file does not follow the required naming convention, skipping..."]
 

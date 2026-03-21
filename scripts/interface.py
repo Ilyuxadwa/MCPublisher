@@ -13,6 +13,7 @@ def page(page: Page):
         table.rows.clear()
 
         for mod in mods:
+            print (mod)
             table.rows.append(
                 DataRow(
                     cells=[
@@ -30,19 +31,14 @@ def page(page: Page):
         if logs:
             print(logs)
             dialog = AlertDialog(
-            title=Text("Logs"),
-            content=Column(
-                    [Text(log) for log in logs],
+                title=Text("Logs"),
+                content=Column(
+                    [Text(log[0]+": " + log[1] + " -> " + log[2]) for log in logs],
                     scroll=ScrollMode.AUTO,
                     height=200,
-                ),
-            actions=[
-                    TextButton("Close", on_click=lambda e: close_dialog())
-                ]
+                )
             )
-            page.dialog = dialog
-            dialog.open = True
-            page.update()
+            page.show_dialog(dialog)
 
     def publish(e):
         pass
@@ -50,9 +46,6 @@ def page(page: Page):
     def open_settings(e):
         pass
 
-    def close_dialog():
-        page.dialog.open = False
-        page.update()
 
     table = DataTable(
         columns=[
@@ -116,7 +109,7 @@ def page(page: Page):
                         icon_color="#ffffff",
                         overlay_color="#757575"
                     ),
-                    on_click=get_mods),
+                    on_click=open_settings),
             ],
         )
     )
