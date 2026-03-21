@@ -1,13 +1,24 @@
 import os
+import json
 from parse import parse
 
+
+
 template = "{mod_id}[{mod_version}]-{loader}({mc_version}).jar"
+
+settings_template = {
+    "mods_path": "mods",
+    "diplay_unknown_mods": True,
+    "display_mods_without_changelog": True,
+    "show_logs": True,
+    "save_cache": True,
+}
 
 
 
 def get_mods():
-    if os.path.exists("mods"):
-        raw_files = os.listdir("mods")
+    if os.path.exists(get_settings("mods_path")):
+        raw_files = os.listdir(get_settings("mods_path"))
 
     if len(raw_files) > 0:
         logs = []    
@@ -30,3 +41,21 @@ def convert_to_data(file):
     else:
         return ["Error", file, "This file does not follow the required naming convention, skipping..."]
 
+
+
+
+def check_settings():
+    return os.path.exists(os.path.dirname(__file__)+"/../settings.json")
+
+def create_settings():
+    with open(os.path.dirname(__file__)+"/../settings.json", "w") as f:
+        json.dump(settings_template, f)
+
+def get_settings(field):
+    with open(os.path.dirname(__file__)+"/../settings.json", "r") as f:
+        settings = json.load(f)
+        return settings[field]
+    
+def save_settings(new_settings):
+    with open(os.path.dirname(__file__)+"/../settings.json", "w") as f:
+        json.dump(new_settings, f)

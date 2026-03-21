@@ -1,5 +1,5 @@
 from flet import *
-import utils as ut
+import utils
 
 def page(page: Page):
     page.title = "MCPublisher"
@@ -9,7 +9,7 @@ def page(page: Page):
     page.bgcolor = "#c1ffe1"
 
     def get_mods(e):
-        mods, logs = ut.get_mods()
+        mods, logs = utils.get_mods()
         table.rows.clear()
 
         for mod in mods:
@@ -28,15 +28,17 @@ def page(page: Page):
         table.update()
 
         
-        if logs:
-            print(logs)
+        if logs and utils.get_settings("show_logs"):
             dialog = AlertDialog(
                 title=Text("Logs"),
                 content=Column(
                     [Text(log[0]+": " + log[1] + " -> " + log[2]) for log in logs],
                     scroll=ScrollMode.AUTO,
                     height=200,
-                )
+                ),
+                actions=[
+                    Button("Close", on_click=lambda e: page.pop_dialog())
+                ]
             )
             page.show_dialog(dialog)
 
@@ -44,8 +46,38 @@ def page(page: Page):
         pass
     
     def open_settings(e):
-        pass
 
+        directory = TextField(label="Mods directory", value=utils.get_settings("mods_path"))
+        unknown_mods = Checkbox(label="Display unknown mods", value=utils.get_settings("diplay_unknown_mods"))
+        mods_without_changelog = Checkbox(label="Mods without changelog", value=utils.get_settings("display_mods_without_changelog"))
+        show_logs = Checkbox(label="Show logs", value=utils.get_settings("show_logs"))
+        save_cache = Checkbox(label="Save cache", value=utils.get_settings("save_cache"))
+        dialog = AlertDialog(
+            title=Text("Settings"),
+            content=Column([
+                directory,
+                unknown_mods,
+                mods_without_changelog,
+                show_logs,
+                save_cache
+            ]),
+            actions=[
+                Button("Save", on_click=lambda e: save_settings(directory, unknown_mods, mods_without_changelog, show_logs, save_cache)),
+                Button("Cancel", on_click=lambda e: page.pop_dialog())
+            ]
+        )
+        page.show_dialog(dialog)
+
+    def save_settings(directory, unknown_mods, mods_without_changelog, show_logs, save_cache):
+        settings = {
+            "mods_path": directory.value,
+            "diplay_unknown_mods": unknown_mods.value,
+            "display_mods_without_changelog": mods_without_changelog.value,
+            "show_logs": show_logs.value,
+            "save_cache": save_cache.value
+        }
+        utils.save_settings(settings)
+        page.pop_dialog()
 
     table = DataTable(
         columns=[
