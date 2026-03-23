@@ -78,8 +78,8 @@ def create_data():
             "curseforge_token": "token",
             "modrinth_token": "token",
             "mods": {
-                "mod_id1": {"curseforge": "CF Project ID", "modrinth": "Modrinth Project ID"},
-                "mod_id2": {"curseforge": "CF Project ID", "modrinth": "Modrinth Project ID"}
+                "mod_id1": {"name": "Mod Name 1", "curseforge": "CF Project ID", "modrinth": "Modrinth Project ID"},
+                "mod_id2": {"name": "Mod Name 2", "curseforge": "CF Project ID", "modrinth": "Modrinth Project ID"}
             }
         }, f, indent=4)
 
@@ -87,9 +87,21 @@ def check_mod(mod_id):
     with open(os.path.dirname(__file__)+"/../access.json", "r") as f:
         data = json.load(f)
         return mod_id in data["mods"]
+    
+def get_access(field, mod_id=None):
+    with open(os.path.dirname(__file__)+"/../access.json", "r") as f:
+        data = json.load(f)
+        if mod_id:
+            return data["mods"][mod_id][field]
+        else:
+            return data[field]
 
 def has_changelog(mod_id):
     return os.path.exists(os.path.dirname(__file__)+"/../changelogs/"+mod_id+".md")
+
+def get_changelog(mod_id):
+    with open(os.path.dirname(__file__)+"/../changelogs/"+mod_id+".md", "r") as f:
+        return f.read()
 
 def save_cache(cache):
     with open(os.path.dirname(__file__)+"/../cache.json", "w") as f:

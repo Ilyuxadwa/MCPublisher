@@ -1,4 +1,5 @@
 from flet import *
+import publisher
 import utils
 
 def page(page: Page):
@@ -59,7 +60,7 @@ def page(page: Page):
 
 
     def publish(e):
-        pass
+        publisher.publish()
     
 
     def open_settings(e):
