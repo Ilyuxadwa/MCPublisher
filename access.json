@@ -1,0 +1,14 @@
+{
+    "curseforge_token": "token",
+    "modrinth_token": "token",
+    "mods": {
+        "mod_id1": {
+            "curseforge": "CF Project ID",
+            "modrinth": "Modrinth Project ID"
+        },
+        "mod_id2": {
+            "curseforge": "CF Project ID",
+            "modrinth": "Modrinth Project ID"
+        }
+    }
+}

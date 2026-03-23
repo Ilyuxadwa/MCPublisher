@@ -4,10 +4,9 @@ from parse import parse
 
 
 
-template = "{mod_id}[{mod_version}]-{loader}({mc_version}).jar"
-
 settings_template = {
     "mods_path": "mods",
+    "mod_file_format": "{mod_id}[{mod_version}]-{loader}({mc_version}).jar",
     "diplay_unknown_mods": True,
     "display_mods_without_changelog": True,
     "show_logs": True,
@@ -35,12 +34,20 @@ def get_mods():
 def convert_to_data(file):
     if "-sources" in file or "-javadoc" in file:
         return ["Warn", file, "This file is not a valid mod file, skipping..."]
-    parsed = parse(template, file)
+    parsed = parse(get_settings("mod_file_format"), file)
     if parsed:
         return [file, parsed["mod_id"], parsed["mod_version"], parsed["loader"], parsed["mc_version"]]
     else:
         return ["Error", file, "This file does not follow the required naming convention, skipping..."]
 
+
+
+def create_dirs():
+    if not os.path.exists(os.path.dirname(__file__)+"/../mods"):
+        os.makedirs(os.path.dirname(__file__)+"/../mods")
+
+    if not os.path.exists(os.path.dirname(__file__)+"/../changelogs"):
+        os.makedirs(os.path.dirname(__file__)+"/../changelogs")
 
 
 
@@ -59,3 +66,31 @@ def get_settings(field):
 def save_settings(new_settings):
     with open(os.path.dirname(__file__)+"/../settings.json", "w") as f:
         json.dump(new_settings, f)
+
+
+
+def check_data():
+    return os.path.exists(os.path.dirname(__file__)+"/../access.json")
+
+def create_data():
+    with open(os.path.dirname(__file__)+"/../access.json", "w") as f:
+        json.dump({
+            "curseforge_token": "token",
+            "modrinth_token": "token",
+            "mods": {
+                "mod_id1": {"curseforge": "CF Project ID", "modrinth": "Modrinth Project ID"},
+                "mod_id2": {"curseforge": "CF Project ID", "modrinth": "Modrinth Project ID"}
+            }
+        }, f, indent=4)
+
+def check_mod(mod_id):
+    with open(os.path.dirname(__file__)+"/../access.json", "r") as f:
+        data = json.load(f)
+        return mod_id in data["mods"]
+
+def has_changelog(mod_id):
+    return os.path.exists(os.path.dirname(__file__)+"/../changelogs/"+mod_id+".md")
+
+def save_cache(cache):
+    with open(os.path.dirname(__file__)+"/../cache.json", "w") as f:
+        json.dump(cache, f, indent=4) 

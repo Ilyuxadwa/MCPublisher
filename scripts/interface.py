@@ -8,22 +8,37 @@ def page(page: Page):
     page.window.height = 540
     page.bgcolor = "#c1ffe1"
 
+
     def get_mods(e):
         mods, logs = utils.get_mods()
         table.rows.clear()
 
         for mod in mods:
-            print (mod)
-            table.rows.append(
-                DataRow(
-                    cells=[
-                        DataCell(Text(mod[1])),
-                        DataCell(Text(mod[2])),
-                        DataCell(Text(mod[3])),
-                        DataCell(Text(mod[4])),
-                    ]
+
+            if utils.check_mod(mod[1]):
+                row_color = "#8df9b4"
+                display = True
+                if not utils.has_changelog(mod[1]):
+                    row_color = "#f9e18d"
+                    display = utils.get_settings("display_mods_without_changelog")
+
+            else:
+                row_color = "#f98d8d"
+                display = utils.get_settings("diplay_unknown_mods")
+
+
+            if display:
+                table.rows.append(
+                    DataRow(
+                        color=row_color,
+                        cells=[
+                            DataCell(Text(mod[1])),
+                            DataCell(Text(mod[2])),
+                            DataCell(Text(mod[3])),
+                            DataCell(Text(mod[4])),
+                        ]
+                    )
                 )
-            )
 
         table.update()
 
@@ -42,12 +57,15 @@ def page(page: Page):
             )
             page.show_dialog(dialog)
 
+
     def publish(e):
         pass
     
+
     def open_settings(e):
 
         directory = TextField(label="Mods directory", value=utils.get_settings("mods_path"))
+        mod_format = TextField(label="Mod file format", value=utils.get_settings("mod_file_format"))
         unknown_mods = Checkbox(label="Display unknown mods", value=utils.get_settings("diplay_unknown_mods"))
         mods_without_changelog = Checkbox(label="Mods without changelog", value=utils.get_settings("display_mods_without_changelog"))
         show_logs = Checkbox(label="Show logs", value=utils.get_settings("show_logs"))
@@ -56,21 +74,23 @@ def page(page: Page):
             title=Text("Settings"),
             content=Column([
                 directory,
+                mod_format,
                 unknown_mods,
                 mods_without_changelog,
                 show_logs,
                 save_cache
             ]),
             actions=[
-                Button("Save", on_click=lambda e: save_settings(directory, unknown_mods, mods_without_changelog, show_logs, save_cache)),
+                Button("Save", on_click=lambda e: save_settings(directory, mod_format, unknown_mods, mods_without_changelog, show_logs, save_cache)),
                 Button("Cancel", on_click=lambda e: page.pop_dialog())
             ]
         )
         page.show_dialog(dialog)
 
-    def save_settings(directory, unknown_mods, mods_without_changelog, show_logs, save_cache):
+    def save_settings(directory, mod_format, unknown_mods, mods_without_changelog, show_logs, save_cache):
         settings = {
             "mods_path": directory.value,
+            "mod_file_format": mod_format.value,
             "diplay_unknown_mods": unknown_mods.value,
             "display_mods_without_changelog": mods_without_changelog.value,
             "show_logs": show_logs.value,
@@ -91,7 +111,7 @@ def page(page: Page):
         bgcolor="#8df9b4",
         heading_row_color="#5fe28f",
         data_row_color="#8df9b4",
-        data_text_style=TextStyle(color="#FFFFFF"),
+        data_text_style=TextStyle(color="#242424"),
         horizontal_lines=True,
         rows=[] 
     )
@@ -145,6 +165,8 @@ def page(page: Page):
             ],
         )
     )
+
+
 
 def build():
     run(page)
