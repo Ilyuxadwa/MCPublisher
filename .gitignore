@@ -1,5 +1,5 @@
-scripts/__pycache__
-mods/*
-changelogs/*
-settings.json
+__pycache__
+mods
+changelogs
 cache/*
+old
