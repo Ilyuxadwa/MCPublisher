@@ -8,6 +8,14 @@ display_mods_without_changelog = True
 show_logs = True
 save_cache = True
 
+loaded_mods = []
+current_logs = []
+
+#changelogs = {"mod_id": {"mod_version": "changes.md"}}
+
+MODRINTH_TOKEN = ""
+CURSEFORGE_TOKEN = ""
+
 def set_directory(value):
     global directory
     if directory != value:
@@ -36,12 +44,24 @@ def set_save_cache(value):
     save_cache = value
 
 def set_modrinth_token(value):
-    pass
+    global MODRINTH_TOKEN
+    MODRINTH_TOKEN = value
 
 def set_curseforge_token(value):
-    pass
+    global CURSEFORGE_TOKEN
+    CURSEFORGE_TOKEN = value
+
+
+def available_mods():
+    global loaded_mods
+    global current_logs
+    loaded_mods, current_logs = utils.get_mods(directory, mod_file_format)
+    return loaded_mods, current_logs
 
 def start(app):
     global App
     App = app
     utils.create_dirs(app.load("mods_dir"))
+
+def publish():
+    pass
