@@ -2,17 +2,19 @@ from unified_ui import App, Settings
 import flet as ft
 
 import info
-import context
+import main
 
 def build():
     settings = Settings()
     settings_category = settings.add_category("mcpublisher", "Publishing Settings")
-    settings_category.add_directory("mods_dir", "Mods Directory", "mods", on_change=lambda value: context.set_directory(value))
-    settings_category.add_text("mod_file_format", "Mod file format", "{mod_id}[{mod_version}]-{loader}({mc_version}).jar", on_change=lambda value: context.set_mod_file_format(value))
-    settings_category.add_toggle("display_unknown_mods", "Display unknown mods", True, on_change=lambda value: context.set_display_unknown_mods(value))
-    settings_category.add_toggle("display_mods_without_changelog", "Display mods without changelog", True, on_change=lambda value: context.set_display_mods_without_changelog(value))
-    settings_category.add_toggle("show_logs", "Show logs", True, on_change=lambda value: context.set_show_logs(value))
-    settings_category.add_toggle("save_cache", "Save cache", True, on_change=lambda value: context.set_save_cache(value))
+    settings_category.add_directory("mods_dir", "Mods Directory", "mods", on_change=lambda value: main.set_directory(value))
+    settings_category.add_text("mod_file_format", "Mod file format", "{mod_id}[{mod_version}]-{loader}({mc_version}).jar", on_change=lambda value: main.set_mod_file_format(value))
+    settings_category.add_toggle("display_unknown_mods", "Display unknown mods", True, on_change=lambda value: main.set_display_unknown_mods(value))
+    settings_category.add_toggle("display_mods_without_changelog", "Display mods without changelog", True, on_change=lambda value: main.set_display_mods_without_changelog(value))
+    settings_category.add_toggle("show_logs", "Show logs", True, on_change=lambda value: main.set_show_logs(value))
+    settings_category.add_toggle("save_cache", "Save cache", True, on_change=lambda value: main.set_save_cache(value))
+    settings_category.add_text("modrinth_token", "Modrinth Token", "", on_change=lambda value: main.set_modrinth_token(value))
+    settings_category.add_text("curseforge_token", "CurseForge Token", "", on_change=lambda value: main.set_curseforge_token(value))
 
     app = App()
     app.set_size("1/2")
@@ -68,6 +70,6 @@ def build():
                     on_click=lambda e: print("Publish clicked"))
             ]
         ))
-    app.run(info.APP_NAME)
+    return app.run(info.APP_NAME)
     
 
