@@ -1,25 +1,10 @@
-from unified_ui import App, Settings
+from unified_ui import App, Settings, tools
 import flet as ft
 
 import info
 import main
 
-table = ft.DataTable(
-    columns=[
-        ft.DataColumn(ft.Text("ID", color="#ffffff")),
-        ft.DataColumn(ft.Text("Version", color="#ffffff")),
-        ft.DataColumn(ft.Text("Loader", color="#ffffff")),
-        ft.DataColumn(ft.Text("Minecraft", color="#ffffff"))
-    ],
-    width = 800,
-    height = 350,
-    bgcolor="#8df9b4",
-    heading_row_color="#5fe28f",
-    data_row_color="#8df9b4",
-    data_text_style=ft.TextStyle(color="#242424"),
-    horizontal_lines=True,
-    rows=[] 
-)
+#table = None
 
 def update_table():
     global table
@@ -54,6 +39,19 @@ def update_table():
 
     table.update()
 
+def main_ui(app):
+    #global table
+
+    #table = tools.Table(app, 12).cols("ID", "Version", "Loader", "Minecraft")
+    #app.add_element(app.alignment("rcenter", table, expand=True))
+    app.add_element(app.alignment("rcenter", 
+                        ft.IconButton(ft.Icons.GET_APP_ROUNDED, width = tools.adapt_dimensions(app, "w", 6), height = tools.adapt_dimensions(app, "w", 6), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
+                        ft.IconButton(ft.Icons.FORMAT_LIST_BULLETED_ROUNDED, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
+                        ft.Button("Publish", width = tools.adapt_dimensions(app, "w", 16), height = tools.adapt_dimensions(app, "w", 7.5), style=tools.main_button_style(app, 16, padding = 0), on_click=lambda _: print("Button clicked!")),
+                        ft.IconButton(ft.Icons.EDIT_DOCUMENT, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
+                        ft.IconButton(ft.Icons.HISTORY_ROUNDED, width = tools.adapt_dimensions(app, "w", 6), height = tools.adapt_dimensions(app, "w", 6), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
+                    expand=True))
+    
 def build():
     global table
     settings = Settings()
@@ -73,62 +71,7 @@ def build():
     app.is_fixed_size(True)
     app.custom_settings(settings)
     app.set_version(info.VERSION)
-
-    app.add_element(table)
-    app.add_element(ft.Row(
-            alignment=ft.MainAxisAlignment.CENTER,
-            controls=[
-                ft.IconButton(
-                    ft.Icons.GET_APP_ROUNDED,
-                    width=40,
-                    height=40,
-                    style=ft.ButtonStyle(
-                        shape=ft.RoundedRectangleBorder(radius=10),
-                        color="#ffffff",
-                        bgcolor="#d9cb35",
-                        icon_color="#ffffff",
-                        overlay_color="#c1b52f"
-                    ),
-                    on_click=lambda e: update_table()),
-                ft.ElevatedButton(
-                    "Publish",
-                    width=150,
-                    height=50,
-                    style=ft.ButtonStyle(
-                        text_style=ft.TextStyle(size=18, weight=ft.FontWeight.BOLD),
-                        shape=ft.RoundedRectangleBorder(radius=10),
-                        color="#ffffff",
-                        bgcolor="#4ee62c",
-                        overlay_color="#4ec02f",
-
-                    ),
-                    on_click=lambda e: print("Publish clicked")),
-                ft.IconButton(
-                    ft.Icons.LIST_ALT_ROUNDED,
-                    width=40,
-                    height=40,
-                    style=ft.ButtonStyle(
-                        shape=ft.RoundedRectangleBorder(radius=10),
-                        color="#ffffff",
-                        bgcolor="#d9cb35",
-                        icon_color="#ffffff",
-                        overlay_color="#c1b52f"
-                    ),
-                    on_click=lambda e: print("Refresh clicked")),
-                ft.IconButton(
-                    ft.Icons.HISTORY_ROUNDED,
-                    width=40,
-                    height=40,
-                    style=ft.ButtonStyle(
-                        shape=ft.RoundedRectangleBorder(radius=10),
-                        color="#ffffff",
-                        bgcolor="#d9cb35",
-                        icon_color="#ffffff",
-                        overlay_color="#c1b52f"
-                    ),
-                    on_click=lambda e: print("Refresh clicked"))
-            ]
-        ))
+    app.set_ui(main_ui)
     return app.run(info.APP_NAME)
     
 
