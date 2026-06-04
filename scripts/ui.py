@@ -4,7 +4,7 @@ import flet as ft
 import info
 import main
 
-#table = None
+table = None
 
 def update_table():
     global table
@@ -40,10 +40,11 @@ def update_table():
     table.update()
 
 def main_ui(app):
-    #global table
+    global table
 
-    #table = tools.Table(app, 12).cols("ID", "Version", "Loader", "Minecraft")
-    #app.add_element(app.alignment("rcenter", table, expand=True))
+    table = tools.Table(app, 12).cols("ID", "Version", "Loader", "Minecraft")
+    table.size(w=80, h=16)
+    app.add_element(app.alignment("rcenter", table.build(), height = tools.adapt_dimensions(app, "h", 16), expand=True))
     app.add_element(app.alignment("rcenter", 
                         ft.IconButton(ft.Icons.GET_APP_ROUNDED, width = tools.adapt_dimensions(app, "w", 6), height = tools.adapt_dimensions(app, "w", 6), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
                         ft.IconButton(ft.Icons.FORMAT_LIST_BULLETED_ROUNDED, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
@@ -53,7 +54,6 @@ def main_ui(app):
                     expand=True))
     
 def build():
-    global table
     settings = Settings()
     settings_category = settings.add_category("mcpublisher", "App Settings")
     settings_category.add_directory("mods_dir", "Mods Directory", "mods", on_change=lambda value: main.set_directory(value))
