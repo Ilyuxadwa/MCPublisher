@@ -11,17 +11,18 @@ save_cache = True
 loaded_mods = []
 current_logs = []
 
-#changelogs = {"mod_id": {"mod_version": "changes.md"}}
+registered_mods = {"mod_id": {"name": "mod_name", "curseforge_id": "curseforge_id", "modrinth_id": "modrinth_id"}}
+changelogs = {"mod_id": {"mod_version": "changes.md"}}
 
 MODRINTH_TOKEN = ""
 CURSEFORGE_TOKEN = ""
 
 def set_directory(value):
     global directory
-    if directory != value:
+    if directory != "MCPublisher/" + value:
         utils.remove_dirs(directory)
-        directory = value
-        utils.create_dirs(value)
+        directory = "MCPublisher/" + value
+        utils.create_dirs("MCPublisher/" + value)
 
 def set_mod_file_format(value):
     global mod_file_format
@@ -52,16 +53,22 @@ def set_curseforge_token(value):
     CURSEFORGE_TOKEN = value
 
 
-def available_mods():
+def get_mods():
     global loaded_mods
     global current_logs
     loaded_mods, current_logs = utils.get_mods(directory, mod_file_format)
     return loaded_mods, current_logs
 
+def check_mod(mod_id):
+    return mod_id in registered_mods
+
+def check_changelog(mod_id, version):
+    return mod_id in changelogs and version in changelogs[mod_id]
+
 def start(app):
     global App
     App = app
-    utils.create_dirs(app.load("mods_dir"))
+    utils.create_dirs("MCPublisher/" + app.load("mods_dir"))
 
 def publish():
     pass

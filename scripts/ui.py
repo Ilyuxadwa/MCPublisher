@@ -6,38 +6,42 @@ import main
 
 table = None
 
-def get_mods():
+def get_mods(app):
     global table
-    table.rows.clear()
-    mods, logs = main.available_mods()
+    table.clear()
+    print("Getting mods...")
+    mods, logs = main.get_mods()
     for mod in mods:
-        display = True
-        #if utils.check_mod(mod[1]):
-        row_color = "#8df9b4"
-        #    display = True
-        #if not utils.check_changelog(mod[1]):
-        #    row_color = "#f9e18d"
-        #    display = main.display_mods_without_changelog
+        if main.check_mod(mod[1]):
+            row_color = "#8df9b4"
+            display = True
+            checked = True
 
-        #else:
-        #    row_color = "#f98d8d"
-        #    display = main.display_unknown_mods
+        else:
+            row_color = "#f98d8d"
+            display = main.display_unknown_mods
+            checked = False
 
+        if not main.check_changelog(mod[1], mod[2]) and checked:
+            row_color = "#f9e18d"
+            display = main.display_mods_without_changelog
 
         if display:
-            table.rows.append(
-                ft.DataRow(
-                    color=row_color,
-                    cells=[
-                        ft.DataCell(ft.Text(mod[1])),
-                        ft.DataCell(ft.Text(mod[2])),
-                        ft.DataCell(ft.Text(mod[3])),
-                        ft.DataCell(ft.Text(mod[4])),
-                    ]
-                )
-            )
-
+            table.add_row(mod[1], mod[2], mod[3], mod[4], color=row_color)
+    
     table.update()
+
+    if logs and main.show_logs:
+        dialog = tools.dialog(app, 12,
+            title=ft.Text("Logs"),
+            content=ft.Column( 
+                [ft.Text(f"{log[0]}: {log[1]} -> {log[2]}", style = tools.primary_text_style(app, 12)) for log in logs],
+            scroll=ft.ScrollMode.AUTO),
+            actions=[
+                ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())
+            ]
+        )
+        app.page.show_dialog(dialog)
 
 def main_ui(app):
     global table
@@ -47,7 +51,7 @@ def main_ui(app):
 
     app.add_element(app.alignment("rcenter", table.build(), height = tools.adapt_dimensions(app, "h", 62), expand=True))
     app.add_element(app.alignment("rcenter", 
-                        ft.IconButton(ft.Icons.GET_APP_ROUNDED, width = tools.adapt_dimensions(app, "w", 6), height = tools.adapt_dimensions(app, "w", 6), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
+                        ft.IconButton(ft.Icons.GET_APP_ROUNDED, width = tools.adapt_dimensions(app, "w", 6), height = tools.adapt_dimensions(app, "w", 6), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda : get_mods(app)),
                         ft.IconButton(ft.Icons.FORMAT_LIST_BULLETED_ROUNDED, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
                         ft.Button("Publish", width = tools.adapt_dimensions(app, "w", 16), height = tools.adapt_dimensions(app, "w", 7.5), style=tools.main_button_style(app, 16, padding = 0), on_click=lambda _: print("Button clicked!")),
                         ft.IconButton(ft.Icons.EDIT_DOCUMENT, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
