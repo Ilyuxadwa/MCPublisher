@@ -54,13 +54,84 @@ def fill_mods_table():
     for mod_id in registered_mods:
         mods_table.add_row(mod_id, registered_mods[mod_id]["name"], registered_mods[mod_id]["curseforge_id"], registered_mods[mod_id]["modrinth_id"])
 
-def register_mod(e):
-    print("Registering mod...")
+def open_registering(app):
+    mod_id = tools.entry(app, 12, label="Mod ID", hint_text="Enter mod ID")
+    name = tools.entry(app, 12, label="Mod Name", hint_text="Enter mod name")
+    cf_id = tools.entry(app, 12, label="CurseForge ID", hint_text="Enter CurseForge ID")
+    mr_id = tools.entry(app, 12, label="Modrinth ID", hint_text="Enter Modrinth ID")
+    message = ft.Text("", style=tools.primary_text_style(app, 12))
+    dialog = tools.dialog(app, 12,
+        title=ft.Text("Add Mod"),
+        content=app.alignment("ccenter", 
+            mod_id, name, cf_id, mr_id, message
+        ),
+        actions=[
+            ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog()),
+            ft.Button("Add", style=tools.ok_button_style(app, 12), on_click=lambda e: save_mod(app, mod_id, name, cf_id, mr_id, message))
+        ]
+    )
+    app.page.show_dialog(dialog)
 
-def edit_mod(e):
-    print("Editing mod...")
+def save_mod(app, mod_id, name, cf_id, mr_id, msg):
+    global mods_table
+    if not mod_id.value or not name.value:
+        msg.value = "Mod ID and names are required!"
+        return
+    
+    elif not cf_id.value and not mr_id.value:
+        msg.value = "At least one of CurseForge ID or Modrinth ID is required!"
+        return
+    elif mod_id.value in main.registered_mods:
+        msg.value = "Mod ID already exists!"
+        return
+    else:
+        main.registered_mods[mod_id.value] = {"name": name.value, "curseforge_id": cf_id.value, "modrinth_id": mr_id.value}
+        fill_mods_table()
+        mods_table.update()
+        app.page.pop_dialog()
 
-def delete_mod(e):
+def edit_mod(app):
+    name = tools.entry(app, 12, label="Mod Name", hint_text="Edit mod name")
+    cf_id = tools.entry(app, 12, label="CurseForge ID", hint_text="Edit CurseForge ID")
+    mr_id = tools.entry(app, 12, label="Modrinth ID", hint_text="Edit Modrinth ID")
+    message = ft.Text("", style=tools.primary_text_style(app, 12))
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], on_select=lambda : fill_mod_info(mod_id, name, cf_id, mr_id))
+    dialog = tools.dialog(app, 12,
+        title=ft.Text("Edit information"),
+        content=app.alignment("ccenter", 
+            mod_id, name, cf_id, mr_id, message
+        ),
+        actions=[
+            ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog()),
+            ft.Button("Save", style=tools.ok_button_style(app, 12), on_click=lambda e: save_editing_mod(app, mod_id, name, cf_id, mr_id, message))
+        ]
+    )
+    app.page.show_dialog(dialog)
+
+def save_editing_mod(app, mod_id, name, cf_id, mr_id, msg):
+    global mods_table
+    if not mod_id.value or not name.value:
+        msg.value = "Mod ID and names are required!"
+        return
+    
+    elif not cf_id.value and not mr_id.value:
+        msg.value = "At least one of CurseForge ID or Modrinth ID is required!"
+        return
+    
+    else:
+        main.registered_mods[mod_id.value] = {"name": name.value, "curseforge_id": cf_id.value, "modrinth_id": mr_id.value}
+        fill_mods_table()
+        mods_table.update()
+        app.page.pop_dialog()
+
+def fill_mod_info(mod_id, name, cf_id, mr_id):
+    mod_info = main.registered_mods.get(mod_id.value)
+    if mod_info:
+        name.value = mod_info["name"]
+        cf_id.value = mod_info["curseforge_id"]
+        mr_id.value = mod_info["modrinth_id"]
+
+def open_deleting_mod(e):
     print("Deleting mod...")
 
 
@@ -107,8 +178,8 @@ def mod_register_ui(app):
     app.add_element(app.alignment("rend", ft.IconButton(ft.Icons.ARROW_BACK_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.main_button_style(app, 8), padding=5, on_click=lambda: app.navigate("main_page"))))
     app.add_element(app.alignment("rcenter", mods_table.build(), height = tools.adapt_dimensions(app, "h", 56), expand=True))
     app.add_element(app.alignment("rcenter", 
-                        ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=register_mod),
-                        ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=edit_mod),
+                        ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=lambda: open_registering(app)),
+                        ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: edit_mod(app)),
                         ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=delete_mod),
                     expand=True))
     
@@ -123,7 +194,7 @@ def changelogs_ui(app):
     app.add_element(app.alignment("rend", ft.IconButton(ft.Icons.ARROW_BACK_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.main_button_style(app, 8), padding=5, on_click=lambda: app.navigate("main_page"))))
     app.add_element(app.alignment("rcenter", changelog_table.build(), height = tools.adapt_dimensions(app, "h", 56), expand=True))
     app.add_element(app.alignment("rcenter", 
-                        ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=register_mod),
+                        ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=open_registering),
                         ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=edit_mod),
                         ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=delete_mod),
                     expand=True))
@@ -142,7 +213,7 @@ def build():
     user_category.add_text("curseforge_token", "CurseForge Token", "", on_change=lambda value: main.set_curseforge_token(value))
 
     app = App()
-    app.set_size("full")
+    app.set_size("1/2")
     app.is_fixed_size(True)
     app.custom_settings(settings)
     app.set_version(info.VERSION)
