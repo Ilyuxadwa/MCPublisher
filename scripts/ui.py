@@ -131,10 +131,32 @@ def fill_mod_info(mod_id, name, cf_id, mr_id):
         cf_id.value = mod_info["curseforge_id"]
         mr_id.value = mod_info["modrinth_id"]
 
-def open_deleting_mod(e):
-    print("Deleting mod...")
+def open_deleting_mod(app):
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods])
+    message = ft.Text("", style=tools.primary_text_style(app, 12))
+    dialog = tools.dialog(app, 12,
+        title=ft.Text("Edit information"),
+        content=app.alignment("ccenter", 
+            mod_id, message
+        ),
+        actions=[
+            ft.Button("Cancel", style=tools.ok_button_style(app, 12), on_click=lambda e: app.page.pop_dialog()),
+            ft.Button("Delete", style=tools.cancel_button_style(app, 12), on_click=lambda e: delete_mod(app, mod_id.value, message))
+        ]
+    )
+    app.page.show_dialog(dialog)
 
-
+def delete_mod(app, mod_id, message):
+    global mods_table
+    if mod_id in main.registered_mods:
+        del main.registered_mods[mod_id]
+        fill_mods_table()
+        mods_table.update()
+        app.page.pop_dialog()
+    elif mod_id == "":
+        message.value = "Please select a mod ID!"
+    else:
+        message.value = "Mod with selected ID not found!"
 
 def fill_changelogs_table():
     global changelog_table
@@ -180,7 +202,7 @@ def mod_register_ui(app):
     app.add_element(app.alignment("rcenter", 
                         ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=lambda: open_registering(app)),
                         ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: edit_mod(app)),
-                        ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=delete_mod),
+                        ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=lambda: open_deleting_mod(app)),
                     expand=True))
     
 def changelogs_ui(app):
