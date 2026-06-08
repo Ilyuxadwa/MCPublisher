@@ -229,22 +229,23 @@ def changelog_editor_ui(app):
     version = tools.entry(app, 12, label="Mod version", hint_text="Version", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True)
     name = tools.entry(app, 12, label="Update name", hint_text="Update name", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True)
     changes = tools.entry(app, 12, label="Changes list", hint_text="State all changes", multiline=True, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 30), fit_parent_size=True, collapsed=True, content_padding=15)
-    preview = ft.Container(bgcolor = app.theme.entry, padding = tools.adapt_dimensions(app, "w", 4), content=ft.Markdown(
+    preview = ft.Markdown(
             value ="# Welcome\n\nTest",
             width = tools.adapt_dimensions(app, "w", 40),
-            height = tools.adapt_dimensions(app, "h", 52)
-    ), width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 60))
+            height = tools.adapt_dimensions(app, "h", 42)
+        )
+   
     app.add_element(app.alignment("rend", ft.IconButton(ft.Icons.ARROW_BACK_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.main_button_style(app, 8), padding=5, on_click=lambda: app.navigate("changelogs_page"))))
     app.add_element(app.alignment("rspace_between",
-        app.alignment("cspace_between", 
-                    mod_id, version, name, changes, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 60)),
-        app.alignment("ccenter", 
-                    preview, width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
-    #app.add_element(app.alignment("rcenter", 
-                        #ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=open_registering),
-                        #ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=edit_mod),
-                        #ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=delete_mod),
-                    #expand=True))
+                        app.alignment("cspace_between", 
+                            mod_id, version, name, changes, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 60)),
+                        app.alignment("cspace_evenly", 
+                            ft.Container(bgcolor = app.theme.entry, padding = tools.adapt_dimensions(app, "w", 4), content=preview, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 50)),
+                            app.alignment("rend", 
+                                ft.Button("Close", style=tools.cancel_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=lambda: app.navigate("changelogs_page")),
+                                ft.Button("Save", style=tools.ok_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=lambda: print("hi")),
+                            expand = True),
+                        width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
     
 def build():
     settings = Settings()
