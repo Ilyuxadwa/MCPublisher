@@ -163,9 +163,10 @@ def delete_mod(app, mod_id, message):
 def fill_changelogs_table():
     global changelog_table
     changelog_table.clear()
-    registered_changelogs = main.registered_changelogs
-    for changelog_id in registered_changelogs:
-        changelog_table.add_row(changelog_id, registered_changelogs[changelog_id]["name"], registered_changelogs[changelog_id]["curseforge_id"], registered_changelogs[changelog_id]["modrinth_id"])
+    changelogs = main.changelogs
+    for mod in changelogs:
+        for version in changelogs[mod]:
+            changelog_table.add_row(mod, version, changelogs[mod][version]["name"])
 
 def register_changelog(e):
     print("Registering changelog...")
@@ -187,7 +188,7 @@ def main_ui(app):
                         ft.IconButton(ft.Icons.GET_APP_ROUNDED, width = tools.adapt_dimensions(app, "w", 6), height = tools.adapt_dimensions(app, "w", 6), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda : get_mods(app)),
                         ft.IconButton(ft.Icons.FORMAT_LIST_BULLETED_ROUNDED, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("mods_register_page")),
                         ft.Button("Publish", width = tools.adapt_dimensions(app, "w", 16), height = tools.adapt_dimensions(app, "w", 7.5), style=tools.main_button_style(app, 16, padding = 0), on_click=lambda _: print("Button clicked!")),
-                        ft.IconButton(ft.Icons.EDIT_DOCUMENT, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
+                        ft.IconButton(ft.Icons.EDIT_DOCUMENT, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("changelogs_page")),
                         ft.IconButton(ft.Icons.HISTORY_ROUNDED, width = tools.adapt_dimensions(app, "w", 6), height = tools.adapt_dimensions(app, "w", 6), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
                     expand=True))
     
@@ -210,7 +211,7 @@ def mod_register_ui(app):
 def changelogs_ui(app):
     global changelog_table
 
-    changelog_table = tools.Table(app, 24).cols("Mod ID", "Name", "CurseForge ID", "Modrinth ID").heading_height(tools.adapt_dimensions(app, "h", 12)).row_height(tools.adapt_dimensions(app, "h", 8))
+    changelog_table = tools.Table(app, 24).cols("Mod ID", "Version", "Update Name").heading_height(tools.adapt_dimensions(app, "h", 12)).row_height(tools.adapt_dimensions(app, "h", 8))
     changelog_table.size(w=88, h=48)
 
     fill_changelogs_table()
@@ -218,10 +219,32 @@ def changelogs_ui(app):
     app.add_element(app.alignment("rend", ft.IconButton(ft.Icons.ARROW_BACK_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.main_button_style(app, 8), padding=5, on_click=lambda: app.navigate("main_page"))))
     app.add_element(app.alignment("rcenter", changelog_table.build(), height = tools.adapt_dimensions(app, "h", 56), expand=True))
     app.add_element(app.alignment("rcenter", 
-                        ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=open_registering),
+                        ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("changelog_editor_page")),
                         ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=edit_mod),
                         ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=delete_mod),
                     expand=True))
+    
+def changelog_editor_ui(app):
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10))
+    version = tools.entry(app, 12, label="Mod version", hint_text="Version", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True)
+    name = tools.entry(app, 12, label="Update name", hint_text="Update name", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True)
+    changes = tools.entry(app, 12, label="Changes list", hint_text="State all changes", multiline=True, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 30), fit_parent_size=True, collapsed=True, content_padding=15)
+    preview = ft.Container(bgcolor = app.theme.entry, padding = tools.adapt_dimensions(app, "w", 4), content=ft.Markdown(
+            value ="# Welcome\n\nTest",
+            width = tools.adapt_dimensions(app, "w", 40),
+            height = tools.adapt_dimensions(app, "h", 52)
+    ), width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 60))
+    app.add_element(app.alignment("rend", ft.IconButton(ft.Icons.ARROW_BACK_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.main_button_style(app, 8), padding=5, on_click=lambda: app.navigate("changelogs_page"))))
+    app.add_element(app.alignment("rspace_between",
+        app.alignment("cspace_between", 
+                    mod_id, version, name, changes, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 60)),
+        app.alignment("ccenter", 
+                    preview, width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
+    #app.add_element(app.alignment("rcenter", 
+                        #ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=open_registering),
+                        #ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=edit_mod),
+                        #ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=delete_mod),
+                    #expand=True))
     
 def build():
     settings = Settings()
@@ -243,7 +266,7 @@ def build():
     app.set_version(info.VERSION)
     app.add_page("main_page", main_ui)
     app.add_page("mods_register_page", mod_register_ui)
-    #app.add_page("changelogs_ui", changelogs_ui)
-    #app.add_page("changelog_editor_ui", changelog_editor_ui)
+    app.add_page("changelogs_page", changelogs_ui)
+    app.add_page("changelog_editor_page", changelog_editor_ui)
     app.set_async_next(main.start)
     app.run(info.APP_NAME)

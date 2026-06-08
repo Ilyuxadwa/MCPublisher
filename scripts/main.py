@@ -13,7 +13,7 @@ loaded_mods = []
 current_logs = []
 
 registered_mods = {}
-changelogs = {"mod_id": {"mod_version": "changes.md"}}
+changelogs = {"mod_id": {"mod_version": {"name": "Name", "changes": "changelog.md"}}}
 
 MODRINTH_TOKEN = ""
 CURSEFORGE_TOKEN = ""
