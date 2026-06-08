@@ -1,5 +1,6 @@
 import os
 from parse import parse
+import json
 
 
 # Directories operations
@@ -43,7 +44,15 @@ def convert_to_data(file, mod_file_format):
         return [file, parsed["mod_id"], parsed["mod_version"], parsed["loader"], parsed["mc_version"]]
     else:
         return ["Error", file, "This file does not follow the required naming convention, skipping..."]
-    
+
+def save_mods(value):
+    return json.dumps(value)
+
+def get_saved_mods(raw):
+    default={}
+    if raw:
+        return json.loads(raw)
+    return default
 
 # Logging operations
 

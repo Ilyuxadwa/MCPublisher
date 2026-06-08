@@ -88,6 +88,7 @@ def save_mod(app, mod_id, name, cf_id, mr_id, msg):
         main.registered_mods[mod_id.value] = {"name": name.value, "curseforge_id": cf_id.value, "modrinth_id": mr_id.value}
         fill_mods_table()
         mods_table.update()
+        app.page.run_task(main.save_mods, app)
         app.page.pop_dialog()
 
 def edit_mod(app):
@@ -122,6 +123,7 @@ def save_editing_mod(app, mod_id, name, cf_id, mr_id, msg):
         main.registered_mods[mod_id.value] = {"name": name.value, "curseforge_id": cf_id.value, "modrinth_id": mr_id.value}
         fill_mods_table()
         mods_table.update()
+        app.page.run_task(main.save_mods, app)
         app.page.pop_dialog()
 
 def fill_mod_info(mod_id, name, cf_id, mr_id):
@@ -243,6 +245,5 @@ def build():
     app.add_page("mods_register_page", mod_register_ui)
     #app.add_page("changelogs_ui", changelogs_ui)
     #app.add_page("changelog_editor_ui", changelog_editor_ui)
-    return app.run(info.APP_NAME)
-    
-
+    app.set_async_next(main.start)
+    app.run(info.APP_NAME)

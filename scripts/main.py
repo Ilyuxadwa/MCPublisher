@@ -1,4 +1,5 @@
 import utils
+import asyncio
 
 App = None
 directory = ""
@@ -11,7 +12,7 @@ save_cache = True
 loaded_mods = []
 current_logs = []
 
-registered_mods = {"mod_id": {"name": "mod_name", "curseforge_id": "curseforge_id", "modrinth_id": "modrinth_id"}}
+registered_mods = {}
 changelogs = {"mod_id": {"mod_version": "changes.md"}}
 
 MODRINTH_TOKEN = ""
@@ -65,10 +66,15 @@ def check_mod(mod_id):
 def check_changelog(mod_id, version):
     return mod_id in changelogs and version in changelogs[mod_id]
 
-def start(app):
+async def save_mods(app):
+    global registered_mods
+    await app.save("registered_mods", utils.save_mods(registered_mods))
+async def start(app):
     global App
+    global registered_mods
     App = app
-    utils.create_dirs("MCPublisher/" + app.load("mods_dir"))
+    utils.create_dirs("MCPublisher/" + await app.load("mods_dir"))
+    registered_mods = utils.get_saved_mods(await app.load("registered_mods"))
 
 def publish():
     pass
