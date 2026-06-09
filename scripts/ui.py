@@ -155,10 +155,43 @@ def delete_mod(app, mod_id, message):
         fill_mods_table()
         mods_table.update()
         app.page.pop_dialog()
+        app.page.run_task(main.save_mods, app)
     elif mod_id == "":
         message.value = "Please select a mod ID!"
     else:
         message.value = "Mod with selected ID not found!"
+
+def open_changelog_deleting(app): 
+    version = tools.dropdown(app, 12, label="Version", options=[])
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.changelogs], on_select=lambda: fill_deleting_options(mod_id, version))
+    message = ft.Text("", style=tools.primary_text_style(app, 12))
+    dialog = tools.dialog(app, 12,
+        title=ft.Text("Edit information"),
+        content=app.alignment("ccenter", 
+            mod_id, version, message
+        ),
+        actions=[
+            ft.Button("Cancel", style=tools.ok_button_style(app, 12), on_click=lambda e: app.page.pop_dialog()),
+            ft.Button("Delete", style=tools.cancel_button_style(app, 12), on_click=lambda e: delete_changelog(app, mod_id.value, version.value, message))
+        ]
+    )
+    app.page.show_dialog(dialog)
+
+def fill_deleting_options(mod_id, version):
+    version.options = [ft.DropdownOption(version_to_del, version_to_del) for version_to_del in main.changelogs[mod_id.value]]
+
+def delete_changelog(app, mod_id, version, message):
+    global changelog_table
+    if mod_id in main.changelogs and version in main.changelogs[mod_id]:
+        del main.changelogs[mod_id][version]
+        fill_changelogs_table()
+        changelog_table.update()
+        app.page.pop_dialog()
+        app.page.run_task(main.save_changelog, app)
+    elif mod_id == "" or version == "":
+        message.value = "Please select a mod ID and version!"
+    else:
+        message.value = "Mod with selected ID or version not found!"
 
 def fill_changelogs_table():
     global changelog_table
@@ -212,7 +245,7 @@ def changelogs_ui(app):
     app.add_element(app.alignment("rcenter", 
                         ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("changelog_adder_page")),
                         ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=edit_mod),
-                        ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=delete_mod),
+                        ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=lambda: open_changelog_deleting(app)),
                     expand=True))
     
 def changelog_adder_ui(app):
@@ -264,7 +297,7 @@ def changelog_adder_ui(app):
                                 ft.Button("Save", style=tools.ok_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=register_changelog),
                             expand = True),
                         width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
-    
+
 def build():
     settings = Settings()
     settings_category = settings.add_category("mcpublisher", "App Settings")
