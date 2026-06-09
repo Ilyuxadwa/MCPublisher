@@ -298,6 +298,56 @@ def changelog_adder_ui(app):
                             expand = True),
                         width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
 
+def changelog_editor_ui(app):
+    def edit_info():
+        final_changes = ""
+        for change in changes.value.split("\n"):
+            final_changes += f"- {change}\n"
+        if mod_id.value in main.registered_mods:
+            preview.value = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
+    
+    def register_changelog():
+        final_changes = ""
+        for change in changes.value.split("\n"):
+            final_changes += f"- {change}\n"
+
+        changelog = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
+        if not mod_id.value in main.changelogs:
+            main.changelogs[mod_id.value]={}
+        if not version.value in main.changelogs[mod_id.value]:
+            main.changelogs[mod_id.value][version.value] = {"name": name.value, "changes": changelog}
+            app.page.run_task(main.save_changelog, app)
+            app.navigate("changelogs_page")
+
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = fill_changelog_info)
+    version = tools.dropdown(app, 12, label="Mod version", options=[], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = fill_changelog_info)
+    name = tools.entry(app, 12, label="Update name", hint_text="Update name", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True, on_change = edit_info)
+    changes = tools.entry(app, 12, label="Changes list", hint_text="State all changes", multiline=True, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 30), fit_parent_size=True, collapsed=True, content_padding=15, on_change = edit_info)
+    preview = ft.Markdown(
+            value ="",
+            md_style_sheet=ft.MarkdownStyleSheet(
+                p_text_style=ft.TextStyle(color=app.theme.primary),
+                h1_text_style=ft.TextStyle(color=app.theme.primary),
+                h3_text_style=ft.TextStyle(color=app.theme.primary),
+                h6_text_style=ft.TextStyle(color=app.theme.primary),
+                strong_text_style=ft.TextStyle(color=app.theme.primary)
+            ),
+            width = tools.adapt_dimensions(app, "w", 40),
+            height = tools.adapt_dimensions(app, "h", 42)
+        )
+   
+    app.add_element(app.alignment("rend", ft.IconButton(ft.Icons.ARROW_BACK_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.main_button_style(app, 8), padding=5, on_click=lambda: app.navigate("changelogs_page"))))
+    app.add_element(app.alignment("rspace_between",
+                        app.alignment("cspace_between", 
+                            mod_id, version, name, changes, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 60)),
+                        app.alignment("cspace_evenly", 
+                            ft.Container(bgcolor = app.theme.entry, padding = tools.adapt_dimensions(app, "w", 4), content=preview, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 50)),
+                            app.alignment("rend", 
+                                ft.Button("Close", style=tools.cancel_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=lambda: app.navigate("changelogs_page")),
+                                ft.Button("Save", style=tools.ok_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=register_changelog),
+                            expand = True),
+                        width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
+    
 def build():
     settings = Settings()
     settings_category = settings.add_category("mcpublisher", "App Settings")
@@ -320,5 +370,6 @@ def build():
     app.add_page("mods_register_page", mod_register_ui)
     app.add_page("changelogs_page", changelogs_ui)
     app.add_page("changelog_adder_page", changelog_adder_ui)
+    app.add_page("changelog_editor_page", changelog_editor_ui)
     app.set_async_next(main.start)
     app.run(info.APP_NAME)
