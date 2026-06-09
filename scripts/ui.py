@@ -168,9 +168,6 @@ def fill_changelogs_table():
         for version in changelogs[mod]:
             changelog_table.add_row(mod, version, changelogs[mod][version]["name"])
 
-def register_changelog(e):
-    print("Registering changelog...")
-
 def edit_changelog(e):
     print("Editing changelog...")
 
@@ -225,12 +222,30 @@ def changelogs_ui(app):
                     expand=True))
     
 def changelog_editor_ui(app):
-    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10))
-    version = tools.entry(app, 12, label="Mod version", hint_text="Version", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True)
-    name = tools.entry(app, 12, label="Update name", hint_text="Update name", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True)
-    changes = tools.entry(app, 12, label="Changes list", hint_text="State all changes", multiline=True, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 30), fit_parent_size=True, collapsed=True, content_padding=15)
+    def edit_info():
+        final_changes = ""
+        for change in changes.value.split("\n"):
+            final_changes += f"- {change}\n"
+        preview.value = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
+    
+    def register_changelog():
+        final_changes = ""
+        for change in changes.value.split("\n"):
+            final_changes += f"- {change}\n"
+        r = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = edit_info)
+    version = tools.entry(app, 12, label="Mod version", hint_text="Version", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True, on_change = edit_info)
+    name = tools.entry(app, 12, label="Update name", hint_text="Update name", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True, on_change = edit_info)
+    changes = tools.entry(app, 12, label="Changes list", hint_text="State all changes", multiline=True, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 30), fit_parent_size=True, collapsed=True, content_padding=15, on_change = edit_info)
     preview = ft.Markdown(
-            value ="# Welcome\n\nTest",
+            value ="",
+            md_style_sheet=ft.MarkdownStyleSheet(
+                #body_text_style=ft.TextStyle(color=app.theme.primary),
+                h1_text_style=ft.TextStyle(color=app.theme.primary),
+                h3_text_style=ft.TextStyle(color=app.theme.primary),
+                h6_text_style=ft.TextStyle(color=app.theme.primary),
+                strong_text_style=ft.TextStyle(color=app.theme.primary)
+            ),
             width = tools.adapt_dimensions(app, "w", 40),
             height = tools.adapt_dimensions(app, "h", 42)
         )

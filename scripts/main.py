@@ -69,6 +69,11 @@ def check_changelog(mod_id, version):
 async def save_mods(app):
     global registered_mods
     await app.save("registered_mods", utils.save_mods(registered_mods))
+
+async def save_changelog(app):
+    global changelogs
+    await app.save("changelogs", utils.save_mods(registered_mods))
+
 async def start(app):
     global App
     global registered_mods
