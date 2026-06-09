@@ -168,12 +168,6 @@ def fill_changelogs_table():
         for version in changelogs[mod]:
             changelog_table.add_row(mod, version, changelogs[mod][version]["name"])
 
-def edit_changelog(e):
-    print("Editing changelog...")
-
-def delete_changelog(e):
-    print("Deleting changelog...")
-
 def main_ui(app):
     global files_table
 
@@ -216,23 +210,32 @@ def changelogs_ui(app):
     app.add_element(app.alignment("rend", ft.IconButton(ft.Icons.ARROW_BACK_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.main_button_style(app, 8), padding=5, on_click=lambda: app.navigate("main_page"))))
     app.add_element(app.alignment("rcenter", changelog_table.build(), height = tools.adapt_dimensions(app, "h", 56), expand=True))
     app.add_element(app.alignment("rcenter", 
-                        ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("changelog_editor_page")),
+                        ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("changelog_adder_page")),
                         ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=edit_mod),
                         ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=delete_mod),
                     expand=True))
     
-def changelog_editor_ui(app):
+def changelog_adder_ui(app):
     def edit_info():
         final_changes = ""
         for change in changes.value.split("\n"):
             final_changes += f"- {change}\n"
-        preview.value = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
+        if mod_id.value in main.registered_mods:
+            preview.value = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
     
     def register_changelog():
         final_changes = ""
         for change in changes.value.split("\n"):
             final_changes += f"- {change}\n"
-        r = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
+
+        changelog = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
+        if not mod_id.value in main.changelogs:
+            main.changelogs[mod_id.value]={}
+        if not version.value in main.changelogs[mod_id.value]:
+            main.changelogs[mod_id.value][version.value] = {"name": name.value, "changes": changelog}
+            app.page.run_task(main.save_changelog, app)
+            app.navigate("changelogs_page")
+
     mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = edit_info)
     version = tools.entry(app, 12, label="Mod version", hint_text="Version", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True, on_change = edit_info)
     name = tools.entry(app, 12, label="Update name", hint_text="Update name", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True, on_change = edit_info)
@@ -240,7 +243,7 @@ def changelog_editor_ui(app):
     preview = ft.Markdown(
             value ="",
             md_style_sheet=ft.MarkdownStyleSheet(
-                #body_text_style=ft.TextStyle(color=app.theme.primary),
+                p_text_style=ft.TextStyle(color=app.theme.primary),
                 h1_text_style=ft.TextStyle(color=app.theme.primary),
                 h3_text_style=ft.TextStyle(color=app.theme.primary),
                 h6_text_style=ft.TextStyle(color=app.theme.primary),
@@ -258,7 +261,7 @@ def changelog_editor_ui(app):
                             ft.Container(bgcolor = app.theme.entry, padding = tools.adapt_dimensions(app, "w", 4), content=preview, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 50)),
                             app.alignment("rend", 
                                 ft.Button("Close", style=tools.cancel_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=lambda: app.navigate("changelogs_page")),
-                                ft.Button("Save", style=tools.ok_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=lambda: print("hi")),
+                                ft.Button("Save", style=tools.ok_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=register_changelog),
                             expand = True),
                         width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
     
@@ -283,6 +286,6 @@ def build():
     app.add_page("main_page", main_ui)
     app.add_page("mods_register_page", mod_register_ui)
     app.add_page("changelogs_page", changelogs_ui)
-    app.add_page("changelog_editor_page", changelog_editor_ui)
+    app.add_page("changelog_adder_page", changelog_adder_ui)
     app.set_async_next(main.start)
     app.run(info.APP_NAME)

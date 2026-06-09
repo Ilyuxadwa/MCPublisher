@@ -13,7 +13,7 @@ loaded_mods = []
 current_logs = []
 
 registered_mods = {}
-changelogs = {"mod_id": {"mod_version": {"name": "Name", "changes": "changelog.md"}}}
+changelogs = {}
 
 MODRINTH_TOKEN = ""
 CURSEFORGE_TOKEN = ""
@@ -68,18 +68,20 @@ def check_changelog(mod_id, version):
 
 async def save_mods(app):
     global registered_mods
-    await app.save("registered_mods", utils.save_mods(registered_mods))
+    await app.save("registered_mods", utils.save_dict(registered_mods))
 
 async def save_changelog(app):
     global changelogs
-    await app.save("changelogs", utils.save_mods(registered_mods))
+    await app.save("changelogs", utils.save_dict(changelogs))
 
 async def start(app):
     global App
     global registered_mods
+    global changelogs
     App = app
     utils.create_dirs("MCPublisher/" + await app.load("mods_dir"))
-    registered_mods = utils.get_saved_mods(await app.load("registered_mods"))
+    changelogs = utils.get_dict(await app.load("changelogs"))
+    registered_mods = utils.get_dict(await app.load("registered_mods"))
 
 def publish():
     pass

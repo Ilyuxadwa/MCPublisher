@@ -45,10 +45,10 @@ def convert_to_data(file, mod_file_format):
     else:
         return ["Error", file, "This file does not follow the required naming convention, skipping..."]
 
-def save_mods(value):
+def save_dict(value):
     return json.dumps(value)
 
-def get_saved_mods(raw):
+def get_dict(raw):
     default={}
     if raw:
         return json.loads(raw)
