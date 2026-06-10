@@ -3,7 +3,7 @@ import requests
 import utils
 
 def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs):
-    logs = [] # file, parsed["mod_id"], parsed["mod_version"], parsed["loader"], parsed["mc_version"]
+    logs = []
     for mod in mods:
         if mod[1] in register:
             project_cf_id = register[mod[1]]["curseforge_id"]
