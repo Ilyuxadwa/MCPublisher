@@ -1,5 +1,5 @@
 import utils
-import asyncio
+import publisher
 
 App = None
 directory = ""
@@ -78,10 +78,17 @@ async def start(app):
     global App
     global registered_mods
     global changelogs
+    global directory
     App = app
-    utils.create_dirs("MCPublisher/" + await app.load("mods_dir"))
+    utils.create_dirs("MCPublisher/" + directory)
     changelogs = utils.get_dict(await app.load("changelogs"))
     registered_mods = utils.get_dict(await app.load("registered_mods"))
 
 def publish():
-    pass
+    global CURSEFORGE_TOKEN
+    global MODRINTH_TOKEN
+    global loaded_mods
+    global registered_mods
+    global changelogs
+
+    publisher.publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, loaded_mods, registered_mods, changelogs)
