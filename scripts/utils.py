@@ -45,6 +45,9 @@ def convert_to_data(file, mod_file_format):
     else:
         return ["Error", file, "This file does not follow the required naming convention, skipping..."]
 
+
+# Saving utils
+
 def save_dict(value):
     return json.dumps(value)
 
@@ -54,6 +57,14 @@ def get_dict(raw):
         return json.loads(raw)
     return default
 
+
+# Formatting utils
+
+def format_changes(mod_id, mod_name, name, version, changes):
+    final_changes = ""
+    for change in changes:
+        final_changes += f"- {change}\n"
+    return f"# ***{name}***\n###### v{version} for {mod_name}\n---\n ### What's New:\n {final_changes}" 
 # Logging operations
 
 def error(message):

@@ -3,6 +3,7 @@ import flet as ft
 
 import info
 import main
+import utils
 
 files_table = None
 mods_table = None
@@ -244,35 +245,30 @@ def changelogs_ui(app):
     app.add_element(app.alignment("rcenter", changelog_table.build(), height = tools.adapt_dimensions(app, "h", 56), expand=True))
     app.add_element(app.alignment("rcenter", 
                         ft.IconButton(ft.Icons.ADD_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.ok_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("changelog_adder_page")),
-                        ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=edit_mod),
+                        ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("changelog_editor_page")),
                         ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=lambda: open_changelog_deleting(app)),
                     expand=True))
     
 def changelog_adder_ui(app):
     def edit_info():
-        final_changes = ""
-        for change in changes.value.split("\n"):
-            final_changes += f"- {change}\n"
         if mod_id.value in main.registered_mods:
-            preview.value = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
+            preview.value = utils.format_changes(mod_id.value, main.registered_mods[mod_id.value]["name"], name.value, version.value, changes.value.split("\n"))
     
     def register_changelog():
-        final_changes = ""
-        for change in changes.value.split("\n"):
-            final_changes += f"- {change}\n"
-
-        changelog = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
         if not mod_id.value in main.changelogs:
             main.changelogs[mod_id.value]={}
         if not version.value in main.changelogs[mod_id.value]:
-            main.changelogs[mod_id.value][version.value] = {"name": name.value, "changes": changelog}
+            main.changelogs[mod_id.value][version.value] = {"name": name.value, "changes": changes.value.split("\n")}
             app.page.run_task(main.save_changelog, app)
             app.navigate("changelogs_page")
+        else:
+            message.value = "Changelog for this version already exists."
 
     mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = edit_info)
     version = tools.entry(app, 12, label="Mod version", hint_text="Version", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True, on_change = edit_info)
     name = tools.entry(app, 12, label="Update name", hint_text="Update name", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True, on_change = edit_info)
     changes = tools.entry(app, 12, label="Changes list", hint_text="State all changes", multiline=True, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 30), fit_parent_size=True, collapsed=True, content_padding=15, on_change = edit_info)
+    message = ft.Text("", style=tools.primary_text_style(app, 12))
     preview = ft.Markdown(
             value ="",
             md_style_sheet=ft.MarkdownStyleSheet(
@@ -292,7 +288,8 @@ def changelog_adder_ui(app):
                             mod_id, version, name, changes, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 60)),
                         app.alignment("cspace_evenly", 
                             ft.Container(bgcolor = app.theme.entry, padding = tools.adapt_dimensions(app, "w", 4), content=preview, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 50)),
-                            app.alignment("rend", 
+                            app.alignment("rend",
+                                message, 
                                 ft.Button("Close", style=tools.cancel_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=lambda: app.navigate("changelogs_page")),
                                 ft.Button("Save", style=tools.ok_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=register_changelog),
                             expand = True),
@@ -300,24 +297,23 @@ def changelog_adder_ui(app):
 
 def changelog_editor_ui(app):
     def edit_info():
-        final_changes = ""
-        for change in changes.value.split("\n"):
-            final_changes += f"- {change}\n"
         if mod_id.value in main.registered_mods:
-            preview.value = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
+            preview.value = utils.format_changes(mod_id.value, main.registered_mods[mod_id.value]["name"], name.value, version.value, changes.value.split("\n"))
     
-    def register_changelog():
-        final_changes = ""
-        for change in changes.value.split("\n"):
-            final_changes += f"- {change}\n"
-
-        changelog = f"# ***{name.value}***\n###### v{version.value} for {main.registered_mods[mod_id.value]['name']}\n---\n ### What's New:\n {final_changes}" 
-        if not mod_id.value in main.changelogs:
-            main.changelogs[mod_id.value]={}
-        if not version.value in main.changelogs[mod_id.value]:
-            main.changelogs[mod_id.value][version.value] = {"name": name.value, "changes": changelog}
-            app.page.run_task(main.save_changelog, app)
-            app.navigate("changelogs_page")
+    def save_changelog():
+        main.changelogs[mod_id.value][version.value] = {"name": name.value, "changes": changes.value.split("\n")}
+        app.page.run_task(main.save_changelog, app)
+        app.navigate("changelogs_page")
+    
+    def fill_changelog_info():
+        version.options = [ft.DropdownOption(ver, ver) for ver in main.changelogs[mod_id.value]]
+        if version.value in main.changelogs[mod_id.value]:
+            name.value = main.changelogs[mod_id.value][version.value]["name"]
+            final_changes = ""
+            for change in main.changelogs[mod_id.value][version.value]["changes"]:
+                final_changes += change + "\n"
+            changes.value = final_changes
+        edit_info()
 
     mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = fill_changelog_info)
     version = tools.dropdown(app, 12, label="Mod version", options=[], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = fill_changelog_info)
@@ -344,7 +340,7 @@ def changelog_editor_ui(app):
                             ft.Container(bgcolor = app.theme.entry, padding = tools.adapt_dimensions(app, "w", 4), content=preview, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 50)),
                             app.alignment("rend", 
                                 ft.Button("Close", style=tools.cancel_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=lambda: app.navigate("changelogs_page")),
-                                ft.Button("Save", style=tools.ok_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=register_changelog),
+                                ft.Button("Save", style=tools.ok_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=save_changelog),
                             expand = True),
                         width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
     
