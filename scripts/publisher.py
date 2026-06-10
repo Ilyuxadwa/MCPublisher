@@ -23,7 +23,7 @@ def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs):
     return logs
 
 def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader, changelog, dependencies):
-    pass
+    print (KEY, project_id, name, mod_version, mc_version, loader, changelog)
 
 def upload_curseforge(KEY, project_id, file, name, mod_version, mc_version, loader, changelog, dependencies):
-    pass
+    print (KEY, project_id, name, mod_version, mc_version, loader, changelog)
