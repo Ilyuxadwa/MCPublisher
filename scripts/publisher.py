@@ -1,21 +1,27 @@
 import json
 import requests
+import utils
 
-def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, curseforge):
+def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs):
     logs = [] # file, parsed["mod_id"], parsed["mod_version"], parsed["loader"], parsed["mc_version"]
     for mod in mods:
         if mod[1] in register:
             project_cf_id = register[mod[1]]["curseforge_id"]
             project_md_id = register[mod[1]]["modrinth_id"]
             file = mod[0]
+            version = mod[2]
+            changelog = utils.format_changes(mod[1], register[mod[1]]["name"], changelogs[mod[1]][version]["name"], mod[2], changelogs[mod[1]][version]["changes"])
+            name = register[mod[0]]["name"] + version + mod[3].capitalize() + mod[4]
+            mc_version = mod[4]
+            loader = mod[3]
             if project_cf_id != "":
-                upload_curseforge(CURSEFORGE_TOKEN, project_cf_id, file)
+                upload_curseforge(CURSEFORGE_TOKEN, project_cf_id, file, name, version, mc_version, loader, changelog)
             if project_md_id != "":
-                upload_curseforge(MODRINTH_TOKEN, project_md_id, file)
+                upload_curseforge(MODRINTH_TOKEN, project_md_id, file, name, version, mc_version, loader, changelog)
     return logs
 
-def upload_modrinth(KEY, project_id):
+def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader, changelog):
     pass
 
-def upload_curseforge(KEY, project_id):
+def upload_curseforge(KEY, project_id, file, name, mod_version, mc_version, loader, changelog):
     pass
