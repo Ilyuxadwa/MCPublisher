@@ -60,20 +60,22 @@ def open_registering(app):
     name = tools.entry(app, 12, label="Mod Name", hint_text="Enter mod name")
     cf_id = tools.entry(app, 12, label="CurseForge ID", hint_text="Enter CurseForge ID")
     mr_id = tools.entry(app, 12, label="Modrinth ID", hint_text="Enter Modrinth ID")
+    cf_deps = tools.entry(app, 12, label="Dependencies CurseForge Slugs", hint_text="Separete with [Space]")
+    mr_deps = tools.entry(app, 12, label="Dependencies Modrinth ID", hint_text="Separete with [Space]")
     message = ft.Text("", style=tools.primary_text_style(app, 12))
     dialog = tools.dialog(app, 12,
         title=ft.Text("Add Mod"),
         content=app.alignment("ccenter", 
-            mod_id, name, cf_id, mr_id, message
+            mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message
         ),
         actions=[
             ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog()),
-            ft.Button("Add", style=tools.ok_button_style(app, 12), on_click=lambda e: save_mod(app, mod_id, name, cf_id, mr_id, message))
+            ft.Button("Add", style=tools.ok_button_style(app, 12), on_click=lambda e: save_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message))
         ]
     )
     app.page.show_dialog(dialog)
 
-def save_mod(app, mod_id, name, cf_id, mr_id, msg):
+def save_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, msg):
     global mods_table
     if not mod_id.value or not name.value:
         msg.value = "Mod ID and names are required!"
@@ -86,7 +88,9 @@ def save_mod(app, mod_id, name, cf_id, mr_id, msg):
         msg.value = "Mod ID already exists!"
         return
     else:
-        main.registered_mods[mod_id.value] = {"name": name.value, "curseforge_id": cf_id.value, "modrinth_id": mr_id.value}
+        curseforge_deps = [dep for dep in cf_deps.value.split(" ")]
+        modrinth_deps = [dep for dep in mr_deps.value.split(" ")]
+        main.registered_mods[mod_id.value] = {"name": name.value, "curseforge_id": cf_id.value, "modrinth_id": mr_id.value, "curseforge_deps": curseforge_deps, "modrinth_deps": modrinth_deps}
         fill_mods_table()
         mods_table.update()
         app.page.run_task(main.save_mods, app)
@@ -96,21 +100,23 @@ def edit_mod(app):
     name = tools.entry(app, 12, label="Mod Name", hint_text="Edit mod name")
     cf_id = tools.entry(app, 12, label="CurseForge ID", hint_text="Edit CurseForge ID")
     mr_id = tools.entry(app, 12, label="Modrinth ID", hint_text="Edit Modrinth ID")
+    cf_deps = tools.entry(app, 12, label="Dependencies CurseForge Slugs", hint_text="Separete with [Space]")
+    mr_deps = tools.entry(app, 12, label="Dependencies Modrinth ID", hint_text="Separete with [Space]")
     message = ft.Text("", style=tools.primary_text_style(app, 12))
-    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], on_select=lambda : fill_mod_info(mod_id, name, cf_id, mr_id))
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], on_select=lambda : fill_mod_info(mod_id, name, cf_id, mr_id, cf_deps, mr_deps))
     dialog = tools.dialog(app, 12,
         title=ft.Text("Edit information"),
         content=app.alignment("ccenter", 
-            mod_id, name, cf_id, mr_id, message
+            mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message
         ),
         actions=[
             ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog()),
-            ft.Button("Save", style=tools.ok_button_style(app, 12), on_click=lambda e: save_editing_mod(app, mod_id, name, cf_id, mr_id, message))
+            ft.Button("Save", style=tools.ok_button_style(app, 12), on_click=lambda e: save_editing_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message))
         ]
     )
     app.page.show_dialog(dialog)
 
-def save_editing_mod(app, mod_id, name, cf_id, mr_id, msg):
+def save_editing_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, msg):
     global mods_table
     if not mod_id.value or not name.value:
         msg.value = "Mod ID and names are required!"
@@ -121,18 +127,26 @@ def save_editing_mod(app, mod_id, name, cf_id, mr_id, msg):
         return
     
     else:
-        main.registered_mods[mod_id.value] = {"name": name.value, "curseforge_id": cf_id.value, "modrinth_id": mr_id.value}
+        curseforge_deps = [dep for dep in cf_deps.value.split(" ")]
+        modrinth_deps = [dep for dep in mr_deps.value.split(" ")]
+        main.registered_mods[mod_id.value] = {"name": name.value, "curseforge_id": cf_id.value, "modrinth_id": mr_id.value, "curseforge_deps": curseforge_deps, "modrinth_deps": modrinth_deps}
         fill_mods_table()
         mods_table.update()
         app.page.run_task(main.save_mods, app)
         app.page.pop_dialog()
 
-def fill_mod_info(mod_id, name, cf_id, mr_id):
+def fill_mod_info(mod_id, name, cf_id, mr_id, cf_deps, mr_deps):
     mod_info = main.registered_mods.get(mod_id.value)
     if mod_info:
         name.value = mod_info["name"]
         cf_id.value = mod_info["curseforge_id"]
         mr_id.value = mod_info["modrinth_id"]
+        cf_deps.value = ""
+        mr_deps.value = ""
+        for dep in mod_info["curseforge_deps"]:
+            cf_deps.value += dep + " "
+        for dep in mod_info["modrinth_deps"]:
+            mr_deps.value += dep + " "
 
 def open_deleting_mod(app):
     mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods])
