@@ -90,5 +90,6 @@ def publish():
     global loaded_mods
     global registered_mods
     global changelogs
-
-    publisher.publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, loaded_mods, registered_mods, changelogs)
+    if not loaded_mods:
+        return [["Error", "Mods are not loaded.", "You should load mods at first"]]
+    return publisher.publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, loaded_mods, registered_mods, changelogs)
