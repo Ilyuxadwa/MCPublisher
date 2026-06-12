@@ -2,6 +2,13 @@ import json
 import requests
 import utils
 
+CF_LOADER_NAMES = {
+    "fabric":   "Fabric",
+    "forge":    "Forge",
+    "neoforge": "NeoForge",
+    "quilt":    "Quilt",
+}
+
 def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs):
     logs = []
     for mod in mods:
@@ -26,8 +33,63 @@ def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs):
     return logs
 
 def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader, changelog, dependencies):
-    print (KEY, project_id, name, mod_version, mc_version, loader, changelog, dependencies)
-    return ["Success", file, "was published to modrinth"]
+    version_data = {
+        "project_id": project_id,
+        "name": name,
+        "version_number": mod_version,
+        "changelog": changelog,
+        "version_type": "release",
+        "loaders": [loader.lower()],
+        "game_versions": [mc_version],
+        "featured": False,
+        "file_parts": ["jar_file"],
+        "primary_file": "jar_file",
+        "dependencies": [
+            {"project_id": dep, "dependency_type": "required"}
+            for dep in dependencies
+        ],
+    }
+
+    with open(file, "rb") as jar:
+        response = requests.post(
+            "https://api.modrinth.com/v2/version",
+            headers={"Authorization": KEY},
+            data={"data": json.dumps(version_data)},
+            files={"jar_file": (file, jar, "application/java-archive")},
+        )
+
+    if response.ok:
+        data = response.json()
+        return ["Success", file, f"was published to Modrinth as version {data['id']}"]
+    else:
+        return ["Error", file, f"Modrinth upload failed [{response.status_code}]: {response.text}"]
+
 
 def upload_curseforge(KEY, project_id, file, name, mod_version, mc_version, loader, changelog, dependencies):
-    print (KEY, project_id, name, mod_version, mc_version, loader, changelog)
+    metadata = {
+        "changelog": changelog,
+        "changelogType": "markdown",
+        "displayName": name,
+        "gameVersionNames": ["Client", "Server", mc_version, CF_LOADER_NAMES.get(loader.lower(), loader)],
+        "releaseType": "release",
+        "relations": {
+            "projects": [
+                {"slug": dep, "type": "requiredDependency"}
+                for dep in dependencies
+            ]
+        },
+    }
+
+    with open(file, "rb") as jar:
+        response = requests.post(
+            f"https://minecraft.curseforge.com/api/projects/{project_id}/upload-file",
+            headers={"X-Api-Token": KEY},
+            data={"metadata": json.dumps(metadata)},
+            files={"file": (file, jar, "application/java-archive")},
+        )
+
+    if response.ok:
+        data = response.json()
+        return ["Success", file, f"was published to CurseForge as file {data['id']}"]
+    else:
+        return ["Error", file, f"CurseForge upload failed [{response.status_code}]: {response.text}"]
