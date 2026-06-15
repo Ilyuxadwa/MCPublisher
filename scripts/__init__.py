@@ -1,3 +1,3 @@
-import ui
+import application
 
-ui.build()
+application.build()

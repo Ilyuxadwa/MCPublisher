@@ -46,14 +46,14 @@ def get_mods(app):
         )
         app.page.show_dialog(dialog)
 
-
-
 def fill_mods_table():
     global mods_table
     mods_table.clear()
     registered_mods = main.registered_mods
     for mod_id in registered_mods:
         mods_table.add_row(mod_id, registered_mods[mod_id]["name"], registered_mods[mod_id]["curseforge_id"], registered_mods[mod_id]["modrinth_id"])
+
+
 
 def open_registering(app):
     mod_id = tools.entry(app, 12, label="Mod ID", hint_text="Enter mod ID")
@@ -176,6 +176,8 @@ def delete_mod(app, mod_id, message):
     else:
         message.value = "Mod with selected ID not found!"
 
+
+
 def open_changelog_deleting(app): 
     version = tools.dropdown(app, 12, label="Version", options=[])
     mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.changelogs], on_select=lambda: fill_deleting_options(mod_id, version))
@@ -216,6 +218,8 @@ def fill_changelogs_table():
         for version in changelogs[mod]:
             changelog_table.add_row(mod, version, changelogs[mod][version]["name"])
 
+
+
 def begin_publishing(app):
     logs = main.publish()    
     if logs and main.show_logs:
@@ -229,6 +233,7 @@ def begin_publishing(app):
             ]
         )
         app.page.show_dialog(dialog)
+
 
 
 def main_ui(app):
@@ -372,6 +377,8 @@ def changelog_editor_ui(app):
                                 ft.Button("Save", style=tools.ok_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=save_changelog),
                             expand = True),
                         width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
+    
+
     
 def build():
     settings = Settings()
