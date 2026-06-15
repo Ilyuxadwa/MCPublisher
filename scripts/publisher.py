@@ -26,7 +26,8 @@ def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs):
             mr_dependencies = register[mod[1]]["modrinth_deps"]
             cf_dependencies = register[mod[1]]["curseforge_deps"]
             if project_cf_id != "" and CURSEFORGE_TOKEN != "":
-                pass#response = upload_curseforge(CURSEFORGE_TOKEN, project_cf_id, file, name, version, mc_version, loader, changelog, cf_dependencies)
+                response = upload_curseforge(CURSEFORGE_TOKEN, project_md_id, file, name, version, mc_version, loader, changelog, mr_dependencies)
+                logs.append(response)
             if project_md_id != "" and MODRINTH_TOKEN != "":
                 response = upload_modrinth(MODRINTH_TOKEN, project_md_id, file, name, version, mc_version, loader, changelog, mr_dependencies)
                 logs.append(response)
