@@ -233,6 +233,8 @@ def begin_publishing(app):
             ]
         )
         app.page.show_dialog(dialog)
+    if main.save_cache:
+       app.page.run_task(main.save_caches, app)
 
 
 
@@ -388,7 +390,7 @@ def build():
     settings_category.add_toggle("display_unknown_mods", "Display unknown mods", True, on_change=lambda value: main.set_display_unknown_mods(value))
     settings_category.add_toggle("display_mods_without_changelog", "Display mods without changelog", True, on_change=lambda value: main.set_display_mods_without_changelog(value))
     settings_category.add_toggle("show_logs", "Show logs", True, on_change=lambda value: main.set_show_logs(value))
-    settings_category.add_toggle("save_cache", "Save cache", True, on_change=lambda value: main.set_save_cache(value))
+    settings_category.add_toggle("save_cache", "Save history", True, on_change=lambda value: main.set_save_cache(value))
     user_category = settings.add_category("user", "User Settings")
     user_category.add_text("modrinth_token", "Modrinth Token", "", on_change=lambda value: main.set_modrinth_token(value))
     user_category.add_text("curseforge_token", "CurseForge Token", "", on_change=lambda value: main.set_curseforge_token(value))

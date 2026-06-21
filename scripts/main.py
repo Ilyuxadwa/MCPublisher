@@ -12,6 +12,7 @@ save_cache = True
 loaded_mods = []
 current_logs = []
 
+saved_cache = []
 registered_mods = {}
 changelogs = {}
 
@@ -57,7 +58,8 @@ def set_curseforge_token(value):
 def get_mods():
     global loaded_mods
     global current_logs
-    loaded_mods, current_logs = utils.get_mods(directory, mod_file_format)
+    global saved_cache
+    loaded_mods, current_logs = utils.get_mods(directory, mod_file_format, saved_cache)
     return loaded_mods, current_logs
 
 def check_mod(mod_id):
@@ -74,15 +76,21 @@ async def save_changelog(app):
     global changelogs
     await app.save("changelogs", utils.save_dict(changelogs))
 
+async def save_caches(app):
+    global registered_mods
+    await app.save("history", saved_cache)
+
 async def start(app):
     global App
     global registered_mods
     global changelogs
     global directory
+    global saved_cache
     App = app
     utils.create_dirs("MCPublisher/" + directory)
     changelogs = utils.get_dict(await app.load("changelogs"))
     registered_mods = utils.get_dict(await app.load("registered_mods"))
+    saved_cache = await app.load("history")
 
 def publish():
     global CURSEFORGE_TOKEN
@@ -90,6 +98,13 @@ def publish():
     global loaded_mods
     global registered_mods
     global changelogs
+    global save_cache
+    global saved_cache
     if not loaded_mods:
         return [["Error", "Mods are not loaded.", "You should load mods at first"]]
-    return publisher.publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, loaded_mods, registered_mods, changelogs)
+    logs = publisher.publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, loaded_mods, registered_mods, changelogs)
+    if save_cache:
+        for log in logs:
+            if log[0]=="Success":
+                saved_cache.append(log[1])
+    return logs

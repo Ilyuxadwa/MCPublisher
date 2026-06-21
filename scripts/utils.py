@@ -20,7 +20,7 @@ def remove_dirs(mods_dir):
 
 # Mods operations
 
-def get_mods(directory, mod_file_format):
+def get_mods(directory, mod_file_format, history):
     if os.path.exists(directory):
         raw_files = os.listdir(directory)
 
@@ -28,7 +28,7 @@ def get_mods(directory, mod_file_format):
         logs = []    
         files = [] 
         for file in raw_files:
-            final = convert_to_data(file, mod_file_format)
+            final = convert_to_data(file, mod_file_format, history)
             if final[0] != "Warn" and final[0] != "Error":
                 files.append(final)
             else:
@@ -36,12 +36,15 @@ def get_mods(directory, mod_file_format):
         return files, logs
     return [], [["Error", "", "No mods in directory found!"]]
 
-def convert_to_data(file, mod_file_format):
+def convert_to_data(file, mod_file_format, history):
     if "-sources" in file or "-javadoc" in file:
         return ["Warn", file, "This file is not a valid mod file, skipping..."]
     parsed = parse(mod_file_format, file)
     if parsed:
-        return [file, parsed["mod_id"], parsed["mod_version"], parsed["loader"], parsed["mc_version"]]
+        if not file in history:
+            return [file, parsed["mod_id"], parsed["mod_version"], parsed["loader"], parsed["mc_version"]]
+        else:
+            return ["Error", file, "This file was already published."]
     else:
         return ["Error", file, "This file does not follow the required naming convention, skipping..."]
 
@@ -65,6 +68,8 @@ def format_changes(mod_id, mod_name, name, version, changes):
     for change in changes:
         final_changes += f"- {change}\n"
     return f"# ***{name}***\n###### v{version} for {mod_name}\n---\n ### What's New:\n {final_changes}" 
+
+
 # Logging operations
 
 def error(message):
