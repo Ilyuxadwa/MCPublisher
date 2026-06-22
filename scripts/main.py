@@ -90,7 +90,9 @@ async def start(app):
     utils.create_dirs(directory)
     changelogs = utils.get_dict(await app.load("changelogs"))
     registered_mods = utils.get_dict(await app.load("registered_mods"))
-    saved_cache = await app.load("history")
+    cache = await app.load("history")
+    if cache:
+        saved_cache = cache
 
 def publish():
     global CURSEFORGE_TOKEN

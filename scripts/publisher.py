@@ -27,7 +27,7 @@ def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs, direct
             mr_dependencies = register[mod[1]]["modrinth_deps"]
             cf_dependencies = register[mod[1]]["curseforge_deps"]
             if project_cf_id != "" and CURSEFORGE_TOKEN != "":
-                response = upload_curseforge(CURSEFORGE_TOKEN, project_md_id, file, name, version, mc_version, loader, changelog, cf_dependencies)
+                response = upload_curseforge(CURSEFORGE_TOKEN, project_cf_id, file, name, version, mc_version, loader, changelog, cf_dependencies)
                 logs.append(response)
             if project_md_id != "" and MODRINTH_TOKEN != "":
                 response = upload_modrinth(MODRINTH_TOKEN, project_md_id, file, name, version, mc_version, loader, changelog, mr_dependencies)
@@ -56,8 +56,6 @@ def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader
         ],
     }
 
-    print(json.dumps(version_data, indent=2))
-
     mp = CurlMime()
     mp.addpart(name="data", content_type="application/json", data=json.dumps(version_data).encode())
     mp.addpart(name="jar_file", content_type="application/java-archive", filename=os.path.basename(file), local_path=file)
@@ -71,9 +69,6 @@ def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader
     )
     mp.close()
 
-    print("STATUS:", response.status_code)
-    print("BODY:", response.text[:500])
-
     if response.ok:
         try:
             data = response.json()
@@ -85,20 +80,22 @@ def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader
 
 
 def upload_curseforge(KEY, project_id, file, name, mod_version, mc_version, loader, changelog, dependencies):
-    print(KEY, project_id, file, name, mod_version, mc_version, loader, dependencies)
     metadata = {
         "changelog": changelog,
         "changelogType": "markdown",
         "displayName": name,
         "gameVersionNames": ["Client", "Server", mc_version, CF_LOADER_NAMES.get(loader.lower(), loader)],
         "releaseType": "release",
-        "relations": {
+    }
+
+    valid_deps = [dep for dep in dependencies if dep]
+    if valid_deps:
+        metadata["relations"] = {
             "projects": [
                 {"slug": dep, "type": "requiredDependency"}
-                for dep in dependencies if dep
+                for dep in valid_deps
             ]
-        },
-    }
+        }
 
     mp = CurlMime()
     mp.addpart(name="metadata", content_type="application/json", data=json.dumps(metadata).encode())
@@ -112,9 +109,6 @@ def upload_curseforge(KEY, project_id, file, name, mod_version, mc_version, load
         http_version=CurlHttpVersion.V1_1
     )
     mp.close()
-
-    print("STATUS:", response.status_code)
-    print("BODY:", response.text[:500])
 
     if response.ok:
         try:
