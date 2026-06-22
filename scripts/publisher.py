@@ -1,5 +1,6 @@
 import json
-import requests
+from curl_cffi import requests, CurlMime, CurlHttpVersion
+import os
 import utils
 
 CF_LOADER_NAMES = {
@@ -9,13 +10,13 @@ CF_LOADER_NAMES = {
     "quilt":    "Quilt",
 }
 
-def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs):
+def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs, directory):
     logs = []
     for mod in mods:
         if mod[1] in register:
             project_cf_id = register[mod[1]]["curseforge_id"]
             project_md_id = register[mod[1]]["modrinth_id"]
-            file = mod[0]
+            file = directory + "/" + mod[0]
             version = mod[2]
             changelog=""
             if mod[1] in changelogs and mod[2] in changelogs[mod[1]]:
@@ -26,7 +27,7 @@ def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs):
             mr_dependencies = register[mod[1]]["modrinth_deps"]
             cf_dependencies = register[mod[1]]["curseforge_deps"]
             if project_cf_id != "" and CURSEFORGE_TOKEN != "":
-                response = upload_curseforge(CURSEFORGE_TOKEN, project_md_id, file, name, version, mc_version, loader, changelog, mr_dependencies)
+                response = upload_curseforge(CURSEFORGE_TOKEN, project_md_id, file, name, version, mc_version, loader, changelog, cf_dependencies)
                 logs.append(response)
             if project_md_id != "" and MODRINTH_TOKEN != "":
                 response = upload_modrinth(MODRINTH_TOKEN, project_md_id, file, name, version, mc_version, loader, changelog, mr_dependencies)
@@ -34,6 +35,10 @@ def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs):
     return logs
 
 def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader, changelog, dependencies):
+    proj_resp = requests.get(f"https://api.modrinth.com/v2/project/{project_id}", impersonate="chrome")
+    if proj_resp.ok:
+        project_id = proj_resp.json()["id"]
+
     version_data = {
         "project_id": project_id,
         "name": name,
@@ -47,26 +52,40 @@ def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader
         "primary_file": "jar_file",
         "dependencies": [
             {"project_id": dep, "dependency_type": "required"}
-            for dep in dependencies
+            for dep in dependencies if dep
         ],
     }
 
-    with open(file, "rb") as jar:
-        response = requests.post(
-            "https://api.modrinth.com/v2/version",
-            headers={"Authorization": KEY},
-            data={"data": json.dumps(version_data)},
-            files={"jar_file": (file, jar, "application/java-archive")},
-        )
+    print(json.dumps(version_data, indent=2))
+
+    mp = CurlMime()
+    mp.addpart(name="data", content_type="application/json", data=json.dumps(version_data).encode())
+    mp.addpart(name="jar_file", content_type="application/java-archive", filename=os.path.basename(file), local_path=file)
+
+    response = requests.post(
+        "https://api.modrinth.com/v2/version",
+        headers={"Authorization": KEY},
+        multipart=mp,
+        impersonate="safari",
+        http_version=CurlHttpVersion.V1_1
+    )
+    mp.close()
+
+    print("STATUS:", response.status_code)
+    print("BODY:", response.text[:500])
 
     if response.ok:
-        data = response.json()
-        return ["Success", file, f"was published to Modrinth as version {data['id']}"]
+        try:
+            data = response.json()
+            return ["Success", file, f"was published to CurseForge as file {data['id']}"]
+        except Exception:
+            return ["Error", file, f"CurseForge returned non-JSON response [{response.status_code}]: {response.text[:300]}"]
     else:
-        return ["Error", file, f"Modrinth upload failed [{response.status_code}]: {response.text}"]
+        return ["Error", file, f"CurseForge upload failed [{response.status_code}]: {response.text}"]
 
 
 def upload_curseforge(KEY, project_id, file, name, mod_version, mc_version, loader, changelog, dependencies):
+    print(KEY, project_id, file, name, mod_version, mc_version, loader, dependencies)
     metadata = {
         "changelog": changelog,
         "changelogType": "markdown",
@@ -76,21 +95,32 @@ def upload_curseforge(KEY, project_id, file, name, mod_version, mc_version, load
         "relations": {
             "projects": [
                 {"slug": dep, "type": "requiredDependency"}
-                for dep in dependencies
+                for dep in dependencies if dep
             ]
         },
     }
 
-    with open(file, "rb") as jar:
-        response = requests.post(
-            f"https://minecraft.curseforge.com/api/projects/{project_id}/upload-file",
-            headers={"X-Api-Token": KEY},
-            data={"metadata": json.dumps(metadata)},
-            files={"file": (file, jar, "application/java-archive")},
-        )
+    mp = CurlMime()
+    mp.addpart(name="metadata", content_type="application/json", data=json.dumps(metadata).encode())
+    mp.addpart(name="file", content_type="application/java-archive", filename=os.path.basename(file), local_path=file)
+
+    response = requests.post(
+        f"https://minecraft.curseforge.com/api/projects/{project_id}/upload-file",
+        headers={"X-Api-Token": KEY, "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+        multipart=mp,
+        impersonate="safari",
+        http_version=CurlHttpVersion.V1_1
+    )
+    mp.close()
+
+    print("STATUS:", response.status_code)
+    print("BODY:", response.text[:500])
 
     if response.ok:
-        data = response.json()
-        return ["Success", file, f"was published to CurseForge as file {data['id']}"]
+        try:
+            data = response.json()
+            return ["Success", file, f"was published to CurseForge as file {data['id']}"]
+        except Exception:
+            return ["Error", file, f"CurseForge returned non-JSON response [{response.status_code}]: {response.text[:300]}"]
     else:
         return ["Error", file, f"CurseForge upload failed [{response.status_code}]: {response.text}"]

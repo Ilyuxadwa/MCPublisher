@@ -1,5 +1,6 @@
 import os
 from parse import parse
+import shutil
 import json
 
 
@@ -15,7 +16,7 @@ def create_dirs(mods_dir):
 
 def remove_dirs(mods_dir):
     if os.path.exists(mods_dir):
-        os.rmdir(mods_dir)
+        shutil.rmtree(mods_dir)
 
 
 # Mods operations
@@ -36,9 +37,11 @@ def get_mods(directory, mod_file_format, history):
         return files, logs
     return [], [["Error", "", "No mods in directory found!"]]
 
-def convert_to_data(file, mod_file_format, history):
+def convert_to_data(file, mod_file_format, history = None):
     if "-sources" in file or "-javadoc" in file:
         return ["Warn", file, "This file is not a valid mod file, skipping..."]
+    if history is None:
+        history = set()
     parsed = parse(mod_file_format, file)
     if parsed:
         if not file in history:

@@ -87,7 +87,7 @@ async def start(app):
     global directory
     global saved_cache
     App = app
-    utils.create_dirs("MCPublisher/" + directory)
+    utils.create_dirs(directory)
     changelogs = utils.get_dict(await app.load("changelogs"))
     registered_mods = utils.get_dict(await app.load("registered_mods"))
     saved_cache = await app.load("history")
@@ -100,9 +100,10 @@ def publish():
     global changelogs
     global save_cache
     global saved_cache
+    global directory
     if not loaded_mods:
         return [["Error", "Mods are not loaded.", "You should load mods at first"]]
-    logs = publisher.publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, loaded_mods, registered_mods, changelogs)
+    logs = publisher.publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, loaded_mods, registered_mods, changelogs, directory)
     if save_cache:
         for log in logs:
             if log[0]=="Success":
