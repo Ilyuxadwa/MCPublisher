@@ -12,7 +12,6 @@ changelog_table = None
 def get_mods(app):
     global files_table
     files_table.clear()
-    print("Getting mods...")
     mods, logs = main.get_mods()
     for mod in mods:
         if main.check_mod(mod[1]):
@@ -103,7 +102,7 @@ def edit_mod(app):
     cf_deps = tools.entry(app, 12, label="Dependencies CurseForge Slugs", hint_text="Separete with [Space]")
     mr_deps = tools.entry(app, 12, label="Dependencies Modrinth ID", hint_text="Separete with [Space]")
     message = ft.Text("", style=tools.primary_text_style(app, 12))
-    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], on_select=lambda : fill_mod_info(mod_id, name, cf_id, mr_id, cf_deps, mr_deps))
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[tools.doption(app, mod_id) for mod_id in main.registered_mods], on_select=lambda : fill_mod_info(mod_id, name, cf_id, mr_id, cf_deps, mr_deps))
     dialog = tools.dialog(app, 12,
         title=ft.Text("Edit information"),
         content=app.alignment("ccenter", 
@@ -149,7 +148,7 @@ def fill_mod_info(mod_id, name, cf_id, mr_id, cf_deps, mr_deps):
             mr_deps.value += dep + " "
 
 def open_deleting_mod(app):
-    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods])
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[tools.doption(app, mod_id) for mod_id in main.registered_mods])
     message = ft.Text("", style=tools.primary_text_style(app, 12))
     dialog = tools.dialog(app, 12,
         title=ft.Text("Edit information"),
@@ -180,7 +179,7 @@ def delete_mod(app, mod_id, message):
 
 def open_changelog_deleting(app): 
     version = tools.dropdown(app, 12, label="Version", options=[])
-    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.changelogs], on_select=lambda: fill_deleting_options(mod_id, version))
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[tools.doption(app, mod_id) for mod_id in main.changelogs], on_select=lambda: fill_deleting_options(app, mod_id, version))
     message = ft.Text("", style=tools.primary_text_style(app, 12))
     dialog = tools.dialog(app, 12,
         title=ft.Text("Edit information"),
@@ -194,8 +193,8 @@ def open_changelog_deleting(app):
     )
     app.page.show_dialog(dialog)
 
-def fill_deleting_options(mod_id, version):
-    version.options = [ft.DropdownOption(version_to_del, version_to_del) for version_to_del in main.changelogs[mod_id.value]]
+def fill_deleting_options(app, mod_id, version):
+    version.options = [tools.doption(app, version_to_del) for version_to_del in main.changelogs[mod_id.value]]
 
 def delete_changelog(app, mod_id, version, message):
     global changelog_table
@@ -217,6 +216,22 @@ def fill_changelogs_table():
     for mod in changelogs:
         for version in changelogs[mod]:
             changelog_table.add_row(mod, version, changelogs[mod][version]["name"])
+
+
+
+def show_history(app):
+    logs = main.saved_cache    
+    if logs and main.show_logs:
+        dialog = tools.dialog(app, 12,
+            title=ft.Text("History"),
+            content=ft.Column( 
+                [ft.Text(f"{log[0]}: {log[1]} -> {log[2]}", style = tools.primary_text_style(app, 12)) for log in logs],
+            scroll=ft.ScrollMode.AUTO),
+            actions=[
+                ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())
+            ]
+        )
+        app.page.show_dialog(dialog)
 
 
 
@@ -250,7 +265,7 @@ def main_ui(app):
                         ft.IconButton(ft.Icons.FORMAT_LIST_BULLETED_ROUNDED, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("mods_register_page")),
                         ft.Button("Publish", width = tools.adapt_dimensions(app, "w", 16), height = tools.adapt_dimensions(app, "w", 7.5), style=tools.main_button_style(app, 16, padding = 0), on_click=lambda: begin_publishing(app)),
                         ft.IconButton(ft.Icons.EDIT_DOCUMENT, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("changelogs_page")),
-                        ft.IconButton(ft.Icons.HISTORY_ROUNDED, width = tools.adapt_dimensions(app, "w", 6), height = tools.adapt_dimensions(app, "w", 6), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda _: print("Button clicked!")),
+                        ft.IconButton(ft.Icons.HISTORY_ROUNDED, width = tools.adapt_dimensions(app, "w", 6), height = tools.adapt_dimensions(app, "w", 6), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: show_history(app)),
                     expand=True))
     
 def mod_register_ui(app):
@@ -300,7 +315,7 @@ def changelog_adder_ui(app):
         else:
             message.value = "Changelog for this version already exists."
 
-    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = edit_info)
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[tools.doption(app, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = edit_info)
     version = tools.entry(app, 12, label="Mod version", hint_text="Version", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True, on_change = edit_info)
     name = tools.entry(app, 12, label="Update name", hint_text="Update name", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True, on_change = edit_info)
     changes = tools.entry(app, 12, label="Changes list", hint_text="State all changes", multiline=True, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 30), fit_parent_size=True, collapsed=True, content_padding=15, on_change = edit_info)
@@ -342,7 +357,7 @@ def changelog_editor_ui(app):
         app.navigate("changelogs_page")
     
     def fill_changelog_info():
-        version.options = [ft.DropdownOption(ver, ver) for ver in main.changelogs[mod_id.value]]
+        version.options = [tools.doption(app, ver) for ver in main.changelogs[mod_id.value]]
         if version.value in main.changelogs[mod_id.value]:
             name.value = main.changelogs[mod_id.value][version.value]["name"]
             final_changes = ""
@@ -351,7 +366,7 @@ def changelog_editor_ui(app):
             changes.value = final_changes
         edit_info()
 
-    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[ft.DropdownOption(mod_id, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = fill_changelog_info)
+    mod_id = tools.dropdown(app, 12, label="Mod ID", options=[tools.doption(app, mod_id) for mod_id in main.registered_mods], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = fill_changelog_info)
     version = tools.dropdown(app, 12, label="Mod version", options=[], width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), on_select = fill_changelog_info)
     name = tools.entry(app, 12, label="Update name", hint_text="Update name", width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 10), fit_parent_size=True, on_change = edit_info)
     changes = tools.entry(app, 12, label="Changes list", hint_text="State all changes", multiline=True, width = tools.adapt_dimensions(app, "w", 48), height = tools.adapt_dimensions(app, "h", 30), fit_parent_size=True, collapsed=True, content_padding=15, on_change = edit_info)
