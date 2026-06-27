@@ -10,7 +10,7 @@ CF_LOADER_NAMES = {
     "quilt":    "Quilt",
 }
 
-def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs, directory):
+def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs, directory, history):
     logs = []
     for mod in mods:
         if mod[1] in register:
@@ -26,10 +26,10 @@ def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs, direct
             loader = mod[3]
             mr_dependencies = register[mod[1]]["modrinth_deps"]
             cf_dependencies = register[mod[1]]["curseforge_deps"]
-            if project_cf_id != "" and CURSEFORGE_TOKEN != "":
+            if project_cf_id != "" and CURSEFORGE_TOKEN != "" and mod[0]+"-cf" not in history:
                 response = upload_curseforge(CURSEFORGE_TOKEN, project_cf_id, file, name, version, mc_version, loader, changelog, cf_dependencies)
                 logs.append(response)
-            if project_md_id != "" and MODRINTH_TOKEN != "":
+            if project_md_id != "" and MODRINTH_TOKEN != "" and mod[0]+"-mr" not in history:
                 response = upload_modrinth(MODRINTH_TOKEN, project_md_id, file, name, version, mc_version, loader, changelog, mr_dependencies)
                 logs.append(response)
     return logs
@@ -72,7 +72,7 @@ def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader
     if response.ok:
         try:
             data = response.json()
-            return ["Success", file, f"was published to CurseForge as file {data['id']}"]
+            return ["Success", file, f"was published to Modrinth as file {data['id']}"]
         except Exception:
             return ["Error", file, f"CurseForge returned non-JSON response [{response.status_code}]: {response.text[:300]}"]
     else:

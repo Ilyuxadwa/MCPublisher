@@ -221,17 +221,23 @@ def fill_changelogs_table():
 
 def show_history(app):
     logs = main.saved_cache    
-    if logs and main.show_logs:
-        dialog = tools.dialog(app, 12,
-            title=ft.Text("History"),
-            content=ft.Column( 
-                [ft.Text(f"{log[0]}: {log[1]} -> {log[2]}", style = tools.primary_text_style(app, 12)) for log in logs],
-            scroll=ft.ScrollMode.AUTO),
-            actions=[
-                ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())
-            ]
-        )
-        app.page.show_dialog(dialog)
+    if logs:
+        lines = []
+        for log in logs:
+            if log.endswith("-cf"):
+                lines.append(ft.Text(log.removesuffix("-cf") + " was published to CurseForge", style = tools.primary_text_style(app, 12)))
+            if log.endswith("-mr"):
+                lines.append(ft.Text(log.removesuffix("-mr") + " was published to Modrinth", style = tools.primary_text_style(app, 12)))
+    dialog = tools.dialog(app, 12,
+        title=ft.Text("History"),
+        content=ft.Column( 
+            lines,
+        scroll=ft.ScrollMode.AUTO),
+        actions=[
+            ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())
+        ]
+    )
+    app.page.show_dialog(dialog)
 
 
 

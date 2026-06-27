@@ -108,6 +108,8 @@ def publish():
     logs = publisher.publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, loaded_mods, registered_mods, changelogs, directory)
     if save_cache:
         for log in logs:
-            if log[0]=="Success":
-                saved_cache.append(log[1])
+            if log[0]=="Success" and "CurseForge" in log[2]:
+                saved_cache.append(log[1]+"-cf")
+            if log[0]=="Success" and "Modrinth" in log[2]:
+                saved_cache.append(log[1]+"-mr")
     return logs
