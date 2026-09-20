@@ -5,9 +5,30 @@ import info
 import main
 import utils
 
+
+
 files_table = None
 mods_table = None
 changelog_table = None
+
+
+
+# ---------- Helpers ----------
+
+def begin_publishing(app):
+    logs = main.publish()    
+    if logs and main.show_logs:
+        dialog = tools.dialog(app, 12,
+            title=ft.Text("Logs"),
+            content=ft.Column( 
+                [ft.Text(f"{log[0]}: {log[1]} -> {log[2]}", style = tools.primary_text_style(app, 12)) for log in logs],
+            scroll=ft.ScrollMode.AUTO),
+            actions=[
+                ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())])
+        app.open_dialog(dialog)
+    if main.save_cache:
+       app.page.run_task(main.save_caches, app)
+
 
 def get_mods(app):
     global files_table
@@ -40,10 +61,9 @@ def get_mods(app):
                 [ft.Text(f"{log[0]}: {log[1]} -> {log[2]}", style = tools.primary_text_style(app, 12)) for log in logs],
             scroll=ft.ScrollMode.AUTO),
             actions=[
-                ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())
-            ]
-        )
-        app.page.show_dialog(dialog)
+                ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())])
+        app.open_dialog(dialog)
+
 
 def fill_mods_table():
     global mods_table
@@ -53,6 +73,27 @@ def fill_mods_table():
         mods_table.add_row(mod_id, registered_mods[mod_id]["name"], registered_mods[mod_id]["curseforge_id"], registered_mods[mod_id]["modrinth_id"])
 
 
+def show_history(app):
+    logs = main.saved_cache    
+    if logs:
+        lines = []
+        for log in logs:
+            if log.endswith("-cf"):
+                lines.append(ft.Text(log.removesuffix("-cf") + " was published to CurseForge", style = tools.primary_text_style(app, 12)))
+            if log.endswith("-mr"):
+                lines.append(ft.Text(log.removesuffix("-mr") + " was published to Modrinth", style = tools.primary_text_style(app, 12)))
+    dialog = tools.dialog(app, 12,
+        title=ft.Text("History"),
+        content=ft.Column( 
+            lines,
+        scroll=ft.ScrollMode.AUTO),
+        actions=[
+            ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())])
+    app.open_dialog(dialog)
+
+
+
+# ---------- Mod operations ----------
 
 def open_registering(app):
     mod_id = tools.entry(app, 12, label="Mod ID", hint_text="Enter mod ID")
@@ -65,14 +106,12 @@ def open_registering(app):
     dialog = tools.dialog(app, 12,
         title=ft.Text("Add Mod"),
         content=app.alignment("ccenter", 
-            mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message
-        ),
+            mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message),
         actions=[
             ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog()),
-            ft.Button("Add", style=tools.ok_button_style(app, 12), on_click=lambda e: save_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message))
-        ]
-    )
-    app.page.show_dialog(dialog)
+            ft.Button("Add", style=tools.ok_button_style(app, 12), on_click=lambda e: save_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message))])
+    app.open_dialog(dialog)
+
 
 def save_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, msg):
     global mods_table
@@ -95,6 +134,7 @@ def save_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, msg):
         app.page.run_task(main.save_mods, app)
         app.page.pop_dialog()
 
+
 def edit_mod(app):
     name = tools.entry(app, 12, label="Mod Name", hint_text="Edit mod name")
     cf_id = tools.entry(app, 12, label="CurseForge ID", hint_text="Edit CurseForge ID")
@@ -106,14 +146,12 @@ def edit_mod(app):
     dialog = tools.dialog(app, 12,
         title=ft.Text("Edit information"),
         content=app.alignment("ccenter", 
-            mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message
-        ),
+            mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message),
         actions=[
             ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog()),
-            ft.Button("Save", style=tools.ok_button_style(app, 12), on_click=lambda e: save_editing_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message))
-        ]
-    )
-    app.page.show_dialog(dialog)
+            ft.Button("Save", style=tools.ok_button_style(app, 12), on_click=lambda e: save_editing_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, message))])
+    app.open_dialog(dialog)
+
 
 def save_editing_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, msg):
     global mods_table
@@ -134,6 +172,7 @@ def save_editing_mod(app, mod_id, name, cf_id, mr_id, cf_deps, mr_deps, msg):
         app.page.run_task(main.save_mods, app)
         app.page.pop_dialog()
 
+
 def fill_mod_info(mod_id, name, cf_id, mr_id, cf_deps, mr_deps):
     mod_info = main.registered_mods.get(mod_id.value)
     if mod_info:
@@ -147,20 +186,19 @@ def fill_mod_info(mod_id, name, cf_id, mr_id, cf_deps, mr_deps):
         for dep in mod_info["modrinth_deps"]:
             mr_deps.value += dep + " "
 
+
 def open_deleting_mod(app):
     mod_id = tools.dropdown(app, 12, label="Mod ID", options=[tools.doption(app, mod_id) for mod_id in main.registered_mods])
     message = ft.Text("", style=tools.primary_text_style(app, 12))
     dialog = tools.dialog(app, 12,
         title=ft.Text("Edit information"),
         content=app.alignment("ccenter", 
-            mod_id, message
-        ),
+            mod_id, message),
         actions=[
             ft.Button("Cancel", style=tools.ok_button_style(app, 12), on_click=lambda e: app.page.pop_dialog()),
-            ft.Button("Delete", style=tools.cancel_button_style(app, 12), on_click=lambda e: delete_mod(app, mod_id.value, message))
-        ]
-    )
-    app.page.show_dialog(dialog)
+            ft.Button("Delete", style=tools.cancel_button_style(app, 12), on_click=lambda e: delete_mod(app, mod_id.value, message))])
+    app.open_dialog(dialog)
+
 
 def delete_mod(app, mod_id, message):
     global mods_table
@@ -177,6 +215,8 @@ def delete_mod(app, mod_id, message):
 
 
 
+# ---------- Changelog operations ----------
+
 def open_changelog_deleting(app): 
     version = tools.dropdown(app, 12, label="Version", options=[])
     mod_id = tools.dropdown(app, 12, label="Mod ID", options=[tools.doption(app, mod_id) for mod_id in main.changelogs], on_select=lambda: fill_deleting_options(app, mod_id, version))
@@ -184,17 +224,16 @@ def open_changelog_deleting(app):
     dialog = tools.dialog(app, 12,
         title=ft.Text("Edit information"),
         content=app.alignment("ccenter", 
-            mod_id, version, message
-        ),
+            mod_id, version, message),
         actions=[
             ft.Button("Cancel", style=tools.ok_button_style(app, 12), on_click=lambda e: app.page.pop_dialog()),
-            ft.Button("Delete", style=tools.cancel_button_style(app, 12), on_click=lambda e: delete_changelog(app, mod_id.value, version.value, message))
-        ]
-    )
-    app.page.show_dialog(dialog)
+            ft.Button("Delete", style=tools.cancel_button_style(app, 12), on_click=lambda e: delete_changelog(app, mod_id.value, version.value, message))])
+    app.open_dialog(dialog)
+
 
 def fill_deleting_options(app, mod_id, version):
     version.options = [tools.doption(app, version_to_del) for version_to_del in main.changelogs[mod_id.value]]
+
 
 def delete_changelog(app, mod_id, version, message):
     global changelog_table
@@ -209,6 +248,7 @@ def delete_changelog(app, mod_id, version, message):
     else:
         message.value = "Mod with selected ID or version not found!"
 
+
 def fill_changelogs_table():
     global changelog_table
     changelog_table.clear()
@@ -219,45 +259,7 @@ def fill_changelogs_table():
 
 
 
-def show_history(app):
-    logs = main.saved_cache    
-    if logs:
-        lines = []
-        for log in logs:
-            if log.endswith("-cf"):
-                lines.append(ft.Text(log.removesuffix("-cf") + " was published to CurseForge", style = tools.primary_text_style(app, 12)))
-            if log.endswith("-mr"):
-                lines.append(ft.Text(log.removesuffix("-mr") + " was published to Modrinth", style = tools.primary_text_style(app, 12)))
-    dialog = tools.dialog(app, 12,
-        title=ft.Text("History"),
-        content=ft.Column( 
-            lines,
-        scroll=ft.ScrollMode.AUTO),
-        actions=[
-            ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())
-        ]
-    )
-    app.page.show_dialog(dialog)
-
-
-
-def begin_publishing(app):
-    logs = main.publish()    
-    if logs and main.show_logs:
-        dialog = tools.dialog(app, 12,
-            title=ft.Text("Logs"),
-            content=ft.Column( 
-                [ft.Text(f"{log[0]}: {log[1]} -> {log[2]}", style = tools.primary_text_style(app, 12)) for log in logs],
-            scroll=ft.ScrollMode.AUTO),
-            actions=[
-                ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())
-            ]
-        )
-        app.page.show_dialog(dialog)
-    if main.save_cache:
-       app.page.run_task(main.save_caches, app)
-
-
+# ---------- UI builders ----------
 
 def main_ui(app):
     global files_table
@@ -273,6 +275,10 @@ def main_ui(app):
                         ft.IconButton(ft.Icons.EDIT_DOCUMENT, width = tools.adapt_dimensions(app, "w", 7), height = tools.adapt_dimensions(app, "w", 7), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("changelogs_page")),
                         ft.IconButton(ft.Icons.HISTORY_ROUNDED, width = tools.adapt_dimensions(app, "w", 6), height = tools.adapt_dimensions(app, "w", 6), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: show_history(app)),
                     expand=True))
+
+
+    
+# ++++++++++ Mods UI ++++++++++
     
 def mod_register_ui(app):
     global mods_table
@@ -289,7 +295,11 @@ def mod_register_ui(app):
                         ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: edit_mod(app)),
                         ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=lambda: open_deleting_mod(app)),
                     expand=True))
+
+
     
+# ++++++++++ Changelogs ++++++++++
+
 def changelogs_ui(app):
     global changelog_table
 
@@ -305,6 +315,7 @@ def changelogs_ui(app):
                         ft.IconButton(ft.Icons.EDIT_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.additional_button_style(app, 8, padding = 5), on_click=lambda: app.navigate("changelog_editor_page")),
                         ft.IconButton(ft.Icons.DELETE_FOREVER_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.cancel_button_style(app, 8, padding = 5), on_click=lambda: open_changelog_deleting(app)),
                     expand=True))
+
     
 def changelog_adder_ui(app):
     def edit_info():
@@ -333,11 +344,9 @@ def changelog_adder_ui(app):
                 h1_text_style=ft.TextStyle(color=app.theme.primary),
                 h3_text_style=ft.TextStyle(color=app.theme.primary),
                 h6_text_style=ft.TextStyle(color=app.theme.primary),
-                strong_text_style=ft.TextStyle(color=app.theme.primary)
-            ),
+                strong_text_style=ft.TextStyle(color=app.theme.primary)),
             width = tools.adapt_dimensions(app, "w", 40),
-            height = tools.adapt_dimensions(app, "h", 42)
-        )
+            height = tools.adapt_dimensions(app, "h", 42))
    
     app.add_element(app.alignment("rend", ft.IconButton(ft.Icons.ARROW_BACK_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.main_button_style(app, 8), padding=5, on_click=lambda: app.navigate("changelogs_page"))))
     app.add_element(app.alignment("rspace_between",
@@ -351,6 +360,7 @@ def changelog_adder_ui(app):
                                 ft.Button("Save", style=tools.ok_button_style(app, 12), width = tools.adapt_dimensions(app, "w", 10), height = tools.adapt_dimensions(app, "h", 8), on_click=register_changelog),
                             expand = True),
                         width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
+
 
 def changelog_editor_ui(app):
     def edit_info():
@@ -383,11 +393,9 @@ def changelog_editor_ui(app):
                 h1_text_style=ft.TextStyle(color=app.theme.primary),
                 h3_text_style=ft.TextStyle(color=app.theme.primary),
                 h6_text_style=ft.TextStyle(color=app.theme.primary),
-                strong_text_style=ft.TextStyle(color=app.theme.primary)
-            ),
+                strong_text_style=ft.TextStyle(color=app.theme.primary)),
             width = tools.adapt_dimensions(app, "w", 40),
-            height = tools.adapt_dimensions(app, "h", 42)
-        )
+            height = tools.adapt_dimensions(app, "h", 42))
    
     app.add_element(app.alignment("rend", ft.IconButton(ft.Icons.ARROW_BACK_ROUNDED, width = tools.adapt_dimensions(app, "h", 10), height = tools.adapt_dimensions(app, "h", 10), style=tools.main_button_style(app, 8), padding=5, on_click=lambda: app.navigate("changelogs_page"))))
     app.add_element(app.alignment("rspace_between",
@@ -402,29 +410,38 @@ def changelog_editor_ui(app):
                         width = tools.adapt_dimensions(app, "w", 48)), width = tools.adapt_dimensions(app, "w", 100), height = tools.adapt_dimensions(app, "h", 60)))
     
 
-    
+
+# ---------- App starting ----------
+     
 def build():
     settings = Settings()
     settings_category = settings.add_category("mcpublisher", "App Settings")
+
     settings_category.add_directory("mods_dir", "Mods Directory", "mods", on_change=lambda value: main.set_directory(value))
     settings_category.add_text("mod_file_format", "Mod file format", "{mod_id}[{mod_version}]-{loader}({mc_version}).jar", on_change=lambda value: main.set_mod_file_format(value))
     settings_category.add_toggle("display_unknown_mods", "Display unknown mods", True, on_change=lambda value: main.set_display_unknown_mods(value))
     settings_category.add_toggle("display_mods_without_changelog", "Display mods without changelog", True, on_change=lambda value: main.set_display_mods_without_changelog(value))
     settings_category.add_toggle("show_logs", "Show logs", True, on_change=lambda value: main.set_show_logs(value))
     settings_category.add_toggle("save_cache", "Save history", True, on_change=lambda value: main.set_save_cache(value))
+
     user_category = settings.add_category("user", "User Settings")
     user_category.add_text("modrinth_token", "Modrinth Token", "", on_change=lambda value: main.set_modrinth_token(value))
     user_category.add_text("curseforge_token", "CurseForge Token", "", on_change=lambda value: main.set_curseforge_token(value))
 
+
     app = App()
+
     app.set_size("1/2")
     app.is_fixed_size(True)
+
     app.custom_settings(settings)
     app.set_version(info.VERSION)
+
     app.add_page("main_page", main_ui)
     app.add_page("mods_register_page", mod_register_ui)
     app.add_page("changelogs_page", changelogs_ui)
     app.add_page("changelog_adder_page", changelog_adder_ui)
     app.add_page("changelog_editor_page", changelog_editor_ui)
+
     app.set_async_next(main.start)
     app.run(info.APP_NAME)

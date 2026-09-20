@@ -1,7 +1,8 @@
 import utils
 import publisher
 
-App = None
+
+
 directory = ""
 mod_file_format = "{mod_id}[{mod_version}]-{loader}({mc_version}).jar"
 display_unknown_mods = True
@@ -18,6 +19,39 @@ changelogs = {}
 
 MODRINTH_TOKEN = ""
 CURSEFORGE_TOKEN = ""
+
+
+
+# ---------- Start everything ----------
+
+async def start(app):
+    global registered_mods
+    global changelogs
+    global directory
+    global saved_cache
+    utils.create_dirs(directory)
+    changelogs = utils.get_dict(await app.load("changelogs"))
+    registered_mods = utils.get_dict(await app.load("registered_mods"))
+    cache = await app.load("history")
+    if cache:
+        saved_cache = cache
+
+
+# ---------- Essentials ----------
+
+def get_mods():
+    global loaded_mods
+    global current_logs
+    global saved_cache
+    loaded_mods, current_logs = utils.get_mods(directory, mod_file_format, saved_cache)
+    return loaded_mods, current_logs
+
+def check_mod(mod_id):
+    return mod_id in registered_mods
+
+def check_changelog(mod_id, version):
+    return mod_id in changelogs and version in changelogs[mod_id]
+
 
 def set_directory(value):
     global directory
@@ -55,18 +89,8 @@ def set_curseforge_token(value):
     CURSEFORGE_TOKEN = value
 
 
-def get_mods():
-    global loaded_mods
-    global current_logs
-    global saved_cache
-    loaded_mods, current_logs = utils.get_mods(directory, mod_file_format, saved_cache)
-    return loaded_mods, current_logs
 
-def check_mod(mod_id):
-    return mod_id in registered_mods
-
-def check_changelog(mod_id, version):
-    return mod_id in changelogs and version in changelogs[mod_id]
+# ---------- Savers ----------
 
 async def save_mods(app):
     global registered_mods
@@ -80,19 +104,9 @@ async def save_caches(app):
     global registered_mods
     await app.save("history", saved_cache)
 
-async def start(app):
-    global App
-    global registered_mods
-    global changelogs
-    global directory
-    global saved_cache
-    App = app
-    utils.create_dirs(directory)
-    changelogs = utils.get_dict(await app.load("changelogs"))
-    registered_mods = utils.get_dict(await app.load("registered_mods"))
-    cache = await app.load("history")
-    if cache:
-        saved_cache = cache
+
+
+# ---------- Publish ----------
 
 def publish():
     global CURSEFORGE_TOKEN

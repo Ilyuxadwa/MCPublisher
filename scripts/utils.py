@@ -4,7 +4,7 @@ import shutil
 import json
 
 
-# Directories operations
+# ---------- Operations with directories ----------
 
 def create_dirs(mods_dir):
     if mods_dir == "":
@@ -19,7 +19,8 @@ def remove_dirs(mods_dir):
         shutil.rmtree(mods_dir)
 
 
-# Mods operations
+
+# ---------- Operations with mods ----------
 
 def get_mods(directory, mod_file_format, history):
     if os.path.exists(directory):
@@ -37,6 +38,7 @@ def get_mods(directory, mod_file_format, history):
         return files, logs
     return [], [["Error", "", "No mods in directory found!"]]
 
+
 def convert_to_data(file, mod_file_format, history = None):
     if "-sources" in file or "-javadoc" in file:
         return ["Warn", file, "This file is not a valid mod file, skipping..."]
@@ -52,10 +54,12 @@ def convert_to_data(file, mod_file_format, history = None):
         return ["Error", file, "This file does not follow the required naming convention, skipping..."]
 
 
-# Saving utils
+
+# ---------- Main logic ----------
 
 def save_dict(value):
     return json.dumps(value)
+
 
 def get_dict(raw):
     default={}
@@ -64,25 +68,11 @@ def get_dict(raw):
     return default
 
 
-# Formatting utils
+
+# ---------- Formatting ----------
 
 def format_changes(mod_id, mod_name, name, version, changes):
     final_changes = ""
     for change in changes:
         final_changes += f"- {change}\n"
     return f"# ***{name}***\n###### v{version} for {mod_name}\n---\n ### What's New:\n {final_changes}" 
-
-
-# Logging operations
-
-def error(message):
-    print(f"[ERROR] {message}")
-
-def warn(message):
-    print(f"[WARN] {message}")
-
-def debug(message):
-    print(f"[DEBUG] {message}")
-
-def log(type,message):
-    print(f"[{type}] {message}")

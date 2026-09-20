@@ -1,7 +1,12 @@
 import json
 from curl_cffi import requests, CurlMime, CurlHttpVersion
 import os
+
 import utils
+
+
+
+# ---------- Constants ----------
 
 CF_LOADER_NAMES = {
     "fabric":   "Fabric",
@@ -9,6 +14,10 @@ CF_LOADER_NAMES = {
     "neoforge": "NeoForge",
     "quilt":    "Quilt",
 }
+
+
+
+# ---------- Logic ----------
 
 def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs, directory, history):
     logs = []
@@ -33,6 +42,7 @@ def publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, mods, register, changelogs, direct
                 response = upload_modrinth(MODRINTH_TOKEN, project_md_id, file, name, version, mc_version, loader, changelog, mr_dependencies)
                 logs.append(response)
     return logs
+
 
 def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader, changelog, dependencies):
     proj_resp = requests.get(f"https://api.modrinth.com/v2/project/{project_id}", impersonate="chrome")
@@ -74,9 +84,9 @@ def upload_modrinth(KEY, project_id, file, name, mod_version, mc_version, loader
             data = response.json()
             return ["Success", file, f"was published to Modrinth as file {data['id']}"]
         except Exception:
-            return ["Error", file, f"CurseForge returned non-JSON response [{response.status_code}]: {response.text[:300]}"]
+            return ["Error", file, f"Modrinth returned non-JSON response [{response.status_code}]: {response.text[:300]}"]
     else:
-        return ["Error", file, f"CurseForge upload failed [{response.status_code}]: {response.text}"]
+        return ["Error", file, f"Modrinth upload failed [{response.status_code}]: {response.text}"]
 
 
 def upload_curseforge(KEY, project_id, file, name, mod_version, mc_version, loader, changelog, dependencies):
