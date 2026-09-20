@@ -16,16 +16,9 @@ changelog_table = None
 # ---------- Helpers ----------
 
 def begin_publishing(app):
-    logs = main.publish()    
-    if logs and main.show_logs:
-        dialog = tools.dialog(app, 12,
-            title=ft.Text("Logs"),
-            content=ft.Column( 
-                [ft.Text(f"{log[0]}: {log[1]} -> {log[2]}", style = tools.primary_text_style(app, 12)) for log in logs],
-            scroll=ft.ScrollMode.AUTO),
-            actions=[
-                ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())])
-        app.open_dialog(dialog)
+    logger = main.publish()    
+    if main.show_logs:
+        app.show_logs(logger)
     if main.save_cache:
        app.page.run_task(main.save_caches, app)
 
@@ -33,7 +26,7 @@ def begin_publishing(app):
 def get_mods(app):
     global files_table
     files_table.clear()
-    mods, logs = main.get_mods()
+    mods = main.get_mods()
     for mod in mods:
         if main.check_mod(mod[1]):
             row_color = "#8df9b4"
@@ -54,15 +47,8 @@ def get_mods(app):
     
     files_table.update()
 
-    if logs and main.show_logs:
-        dialog = tools.dialog(app, 12,
-            title=ft.Text("Logs"),
-            content=ft.Column( 
-                [ft.Text(f"{log[0]}: {log[1]} -> {log[2]}", style = tools.primary_text_style(app, 12)) for log in logs],
-            scroll=ft.ScrollMode.AUTO),
-            actions=[
-                ft.Button("Close", style=tools.cancel_button_style(app, 12), on_click=lambda e: app.page.pop_dialog())])
-        app.open_dialog(dialog)
+    if main.show_logs:
+        app.show_logs(main.logger)
 
 
 def fill_mods_table():

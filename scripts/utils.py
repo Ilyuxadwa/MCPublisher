@@ -22,21 +22,23 @@ def remove_dirs(mods_dir):
 
 # ---------- Operations with mods ----------
 
-def get_mods(directory, mod_file_format, history):
+def get_mods(directory, mod_file_format, history, logger):
     if os.path.exists(directory):
         raw_files = os.listdir(directory)
 
-    if len(raw_files) > 0:
-        logs = []    
+    if len(raw_files) > 0: 
         files = [] 
         for file in raw_files:
             final = convert_to_data(file, mod_file_format, history)
             if final[0] != "Warn" and final[0] != "Error":
                 files.append(final)
             else:
-                logs.append(final)
-        return files, logs
-    return [], [["Error", "", "No mods in directory found!"]]
+                if final[0] == "Warn":
+                    logger.warn(f"{final[1]}: {final[2]}")
+                elif final[0] == "Error":
+                    logger.error(f"{final[1]}: {final[2]}")
+        return files
+    return logger.error("No mods found in the specified directory.")
 
 
 def convert_to_data(file, mod_file_format, history = None):

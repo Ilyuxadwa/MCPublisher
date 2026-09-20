@@ -1,7 +1,10 @@
+from unified_ui.logger import Logger
 import utils
 import publisher
 
 
+
+logger = Logger()
 
 directory = ""
 mod_file_format = "{mod_id}[{mod_version}]-{loader}({mc_version}).jar"
@@ -43,8 +46,10 @@ def get_mods():
     global loaded_mods
     global current_logs
     global saved_cache
-    loaded_mods, current_logs = utils.get_mods(directory, mod_file_format, saved_cache)
-    return loaded_mods, current_logs
+    global logger
+    logger.clear()
+    loaded_mods = utils.get_mods(directory, mod_file_format, saved_cache, logger)
+    return loaded_mods
 
 def check_mod(mod_id):
     return mod_id in registered_mods
@@ -111,19 +116,28 @@ async def save_caches(app):
 def publish():
     global CURSEFORGE_TOKEN
     global MODRINTH_TOKEN
+    global logger
     global loaded_mods
     global registered_mods
     global changelogs
     global save_cache
     global saved_cache
     global directory
+    logger.clear()
     if not loaded_mods:
-        return [["Error", "Mods are not loaded.", "You should load mods at first"]]
-    logs = publisher.publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, loaded_mods, registered_mods, changelogs, directory)
+        logger.error("No mods loaded for publishing.")
+    logs = publisher.publish(MODRINTH_TOKEN, CURSEFORGE_TOKEN, loaded_mods, registered_mods, changelogs, directory, saved_cache)
+    for log in logs:
+        if log[0]=="Success":
+            logger.success(f"{log[1]} {log[2]}")
+        elif log[0]=="Warn":
+            logger.warn(f"{log[1]} {log[2]}")
+        elif log[0]=="Error":
+            logger.error(f"{log[1]} {log[2]}")
     if save_cache:
         for log in logs:
             if log[0]=="Success" and "CurseForge" in log[2]:
                 saved_cache.append(log[1]+"-cf")
             if log[0]=="Success" and "Modrinth" in log[2]:
                 saved_cache.append(log[1]+"-mr")
-    return logs
+    return logger
