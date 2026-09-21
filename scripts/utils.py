@@ -1,18 +1,30 @@
 import os
+import sys
+import ctypes
+from pathlib import Path
 from parse import parse
 import shutil
 import json
 
 
+
 # ---------- Operations with directories ----------
+
+def app_dir():
+    if sys.platform == "win32":
+        buf = ctypes.create_unicode_buffer(32768)
+        if ctypes.windll.kernel32.GetModuleFileNameW(None, buf, len(buf)):
+            exe = Path(buf.value)
+            if not exe.stem.lower().startswith("python"):
+                return exe.parent
+    return Path(__file__).resolve().parent.parent
 
 def create_dirs(mods_dir):
     if mods_dir == "":
-        if not os.path.exists(os.path.dirname(__file__)+"/../mods"):
-            os.makedirs(os.path.dirname(__file__)+"/../mods")
-    else:
-        if not os.path.exists(mods_dir):
-            os.makedirs(mods_dir)
+        mods_dir = str(app_dir() / "mods")
+
+    if not os.path.exists(mods_dir):
+        os.makedirs(mods_dir)
 
 def remove_dirs(mods_dir):
     if os.path.exists(mods_dir):
